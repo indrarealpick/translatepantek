@@ -1,0 +1,1943 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LinguaAI — AI-Powered Translator</title>
+  <meta name="description" content="Translator AI modern dengan OCR, camera capture, dan terjemahan natural berbasis AI. Mendukung Bahasa Indonesia, Inggris, Jepang, Korea, dan Mandarin." />
+  <meta name="keywords" content="translator, AI, OCR, terjemahan, Indonesia, Jepang, Korea, Mandarin, Inggris" />
+  <meta property="og:title" content="LinguaAI — AI-Powered Translator" />
+  <meta property="og:description" content="Translator AI modern dengan hasil terjemahan natural dan kontekstual." />
+  <meta name="theme-color" content="#0f0f13" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+
+  <!-- Tesseract.js OCR -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+  <style>
+    /* ===================== CSS VARIABLES ===================== */
+    :root {
+      --bg: #f0ede8;
+      --bg2: #e8e4dd;
+      --surface: #faf9f7;
+      --surface2: #f2efe9;
+      --border: #ddd9d0;
+      --border2: #ccc8be;
+      --text: #1a1814;
+      --text2: #5a5550;
+      --text3: #9a9590;
+      --accent: #c9622a;
+      --accent2: #a84d1e;
+      --accent-soft: rgba(201, 98, 42, 0.12);
+      --green: #3a8a5a;
+      --green-soft: rgba(58, 138, 90, 0.12);
+      --red: #c0392b;
+      --red-soft: rgba(192, 57, 43, 0.1);
+      --shadow: 0 2px 16px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
+      --shadow-lg: 0 8px 40px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --font-head: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+      --transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    [data-theme="dark"] {
+      --bg: #0f0f13;
+      --bg2: #18181f;
+      --surface: #1e1e28;
+      --surface2: #252530;
+      --border: #2e2e3a;
+      --border2: #3a3a48;
+      --text: #f0ede8;
+      --text2: #a0a0b0;
+      --text3: #60606e;
+      --accent: #e07840;
+      --accent2: #c96030;
+      --accent-soft: rgba(224, 120, 64, 0.12);
+      --green: #4aaa6e;
+      --green-soft: rgba(74, 170, 110, 0.12);
+      --shadow: 0 2px 16px rgba(0,0,0,0.3), 0 1px 4px rgba(0,0,0,0.2);
+      --shadow-lg: 0 8px 40px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.25);
+    }
+
+    /* ===================== RESET ===================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 15px;
+      line-height: 1.6;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    /* ===================== HEADER ===================== */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+
+    .logo-text {
+      font-family: var(--font-head);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.3px;
+    }
+
+    .logo-text span { color: var(--accent); }
+
+    .header-right { display: flex; align-items: center; gap: 12px; }
+
+    .status-dot {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--text3);
+      font-weight: 500;
+    }
+
+    .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 0 rgba(74,170,110,0.4);
+      animation: pulse-dot 2s infinite;
+    }
+
+    .dot.offline { background: var(--red); box-shadow: none; animation: none; }
+
+    @keyframes pulse-dot {
+      0% { box-shadow: 0 0 0 0 rgba(74,170,110,0.4); }
+      70% { box-shadow: 0 0 0 6px rgba(74,170,110,0); }
+      100% { box-shadow: 0 0 0 0 rgba(74,170,110,0); }
+    }
+
+    .btn-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all var(--transition);
+      color: var(--text2);
+      font-size: 16px;
+    }
+
+    .btn-icon:hover { background: var(--border); color: var(--text); transform: scale(1.05); }
+
+    /* ===================== MAIN ===================== */
+    .main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 20px 80px;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 32px 0 28px;
+    }
+
+    .hero h1 {
+      font-family: var(--font-head);
+      font-size: clamp(28px, 5vw, 44px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1.1;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--accent), #e8a060);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      color: var(--text2); font-size: 15px; max-width: 460px; margin: 0 auto;
+    }
+
+    /* ===================== API CONFIG BANNER ===================== */
+    .config-banner {
+      background: var(--accent-soft);
+      border: 1px solid rgba(201,98,42,0.2);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      display: flex; align-items: flex-start; gap: 10px;
+      margin-bottom: 20px;
+      font-size: 13px; color: var(--text2);
+    }
+
+    .config-banner svg { flex-shrink: 0; margin-top: 1px; }
+
+    .config-banner strong { color: var(--accent); }
+
+    .config-banner code {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 1px 6px; border-radius: 4px;
+      font-size: 12px; color: var(--text);
+    }
+
+    .btn-config {
+      margin-left: auto; flex-shrink: 0;
+      padding: 5px 12px; border-radius: 7px;
+      background: var(--accent); color: #fff;
+      border: none; cursor: pointer; font-size: 12px; font-weight: 600;
+      font-family: var(--font-body);
+      transition: all var(--transition);
+      white-space: nowrap;
+    }
+
+    .btn-config:hover { background: var(--accent2); transform: translateY(-1px); }
+
+    /* ===================== TRANSLATOR CARD ===================== */
+    .translator-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    /* ---- Language Bar ---- */
+    .lang-bar {
+      display: flex; align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+      gap: 8px;
+    }
+
+    .lang-select-wrap { flex: 1; position: relative; }
+
+    .lang-select {
+      width: 100%; padding: 8px 36px 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 13px; font-weight: 500;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+
+    .lang-select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    .lang-select-arrow {
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      pointer-events: none; color: var(--text3);
+    }
+
+    .btn-swap {
+      width: 38px; height: 38px; border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all var(--transition);
+      color: var(--text2);
+      flex-shrink: 0;
+    }
+
+    .btn-swap:hover {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: rotate(180deg);
+    }
+
+    /* ---- Text Areas ---- */
+    .panels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 280px;
+    }
+
+    @media (max-width: 680px) {
+      .panels { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      display: flex; flex-direction: column;
+      position: relative;
+    }
+
+    .panel:first-child { border-right: 1px solid var(--border); }
+
+    @media (max-width: 680px) {
+      .panel:first-child { border-right: none; border-bottom: 1px solid var(--border); }
+    }
+
+    .panel-label {
+      padding: 10px 16px 0;
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.6px;
+      color: var(--text3);
+    }
+
+    .textarea {
+      flex: 1; min-height: 220px;
+      width: 100%; padding: 12px 16px;
+      border: none; background: transparent;
+      color: var(--text); font-family: var(--font-body);
+      font-size: 15px; line-height: 1.7; resize: none;
+      outline: none;
+    }
+
+    .textarea::placeholder { color: var(--text3); }
+
+    .output-textarea {
+      color: var(--text2);
+    }
+
+    /* Skeleton */
+    .skeleton-lines { padding: 12px 16px; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+
+    .skeleton-line {
+      height: 14px; border-radius: 6px;
+      background: linear-gradient(90deg, var(--surface2) 25%, var(--border) 50%, var(--surface2) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ---- Panel Footer ---- */
+    .panel-footer {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px;
+      border-top: 1px solid var(--border);
+      background: var(--surface2);
+    }
+
+    .char-count { font-size: 11px; color: var(--text3); margin-right: auto; }
+    .char-count.warn { color: #e08030; }
+    .char-count.max { color: var(--red); }
+
+    .btn-sm {
+      padding: 5px 10px; border-radius: 7px;
+      border: 1px solid var(--border);
+      background: transparent; cursor: pointer;
+      font-size: 12px; font-weight: 500;
+      color: var(--text2); font-family: var(--font-body);
+      display: flex; align-items: center; gap: 5px;
+      transition: all var(--transition);
+    }
+
+    .btn-sm:hover { background: var(--surface); color: var(--text); border-color: var(--border2); }
+
+    .btn-sm.active { background: var(--green-soft); color: var(--green); border-color: rgba(74,170,110,0.3); }
+
+    /* ---- Action Bar ---- */
+    .action-bar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--surface2);
+      flex-wrap: wrap;
+    }
+
+    .btn-translate {
+      padding: 10px 24px; border-radius: 10px;
+      background: var(--accent); color: #fff;
+      border: none; cursor: pointer;
+      font-family: var(--font-head); font-size: 14px; font-weight: 700;
+      letter-spacing: 0.2px;
+      display: flex; align-items: center; gap: 8px;
+      transition: all var(--transition);
+      position: relative; overflow: hidden;
+    }
+
+    .btn-translate::after {
+      content: ''; position: absolute; inset: 0;
+      background: rgba(255,255,255,0.15);
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+    }
+
+    .btn-translate:hover::after { transform: translateX(100%); }
+    .btn-translate:hover { background: var(--accent2); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(201,98,42,0.35); }
+    .btn-translate:active { transform: translateY(0); }
+    .btn-translate:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .btn-translate-spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .btn-translate.loading .btn-translate-spinner { display: block; }
+    .btn-translate.loading .btn-translate-icon { display: none; }
+
+    .auto-translate-wrap {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--text2); cursor: pointer;
+      user-select: none;
+    }
+
+    .toggle {
+      width: 34px; height: 18px; border-radius: 9px;
+      background: var(--border2); position: relative;
+      transition: background var(--transition);
+      flex-shrink: 0;
+    }
+
+    .toggle::after {
+      content: ''; position: absolute; width: 14px; height: 14px;
+      background: #fff; border-radius: 50%;
+      top: 2px; left: 2px;
+      transition: left var(--transition);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .toggle.on { background: var(--accent); }
+    .toggle.on::after { left: 18px; }
+
+    .action-bar-right { margin-left: auto; display: flex; gap: 8px; }
+
+    .hint-text { font-size: 11px; color: var(--text3); padding: 0 4px; }
+
+    /* ===================== OCR SECTION ===================== */
+    .ocr-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-top: 20px;
+      overflow: hidden;
+    }
+
+    .section-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      background: var(--surface2);
+      user-select: none;
+    }
+
+    .section-header-icon {
+      width: 30px; height: 30px; border-radius: 8px;
+      background: linear-gradient(135deg, #6050e8, #4030c8);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; flex-shrink: 0;
+    }
+
+    .section-title {
+      font-family: var(--font-head); font-size: 14px; font-weight: 700;
+      color: var(--text);
+    }
+
+    .section-subtitle { font-size: 12px; color: var(--text3); }
+
+    .section-chevron {
+      margin-left: auto; color: var(--text3);
+      transition: transform var(--transition);
+    }
+
+    .section-chevron.open { transform: rotate(180deg); }
+
+    .ocr-body { display: none; padding: 18px; }
+    .ocr-body.open { display: block; }
+
+    .ocr-upload-area {
+      border: 2px dashed var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 32px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--transition);
+      background: var(--surface2);
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .ocr-upload-area:hover, .ocr-upload-area.dragover {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .ocr-upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+    .ocr-upload-icon { font-size: 36px; margin-bottom: 10px; }
+
+    .ocr-upload-area h3 { font-family: var(--font-head); font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+
+    .ocr-upload-area p { font-size: 12px; color: var(--text3); }
+
+    .ocr-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+
+    .btn-camera {
+      padding: 9px 16px; border-radius: 9px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      cursor: pointer; font-size: 13px; font-weight: 500;
+      color: var(--text2); font-family: var(--font-body);
+      display: flex; align-items: center; gap: 6px;
+      transition: all var(--transition);
+    }
+
+    .btn-camera:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+
+    .ocr-preview { display: none; margin-bottom: 16px; }
+    .ocr-preview.visible { display: block; }
+
+    .ocr-preview img {
+      max-width: 100%; max-height: 280px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display: block;
+    }
+
+    .ocr-lang-select-wrap {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 16px; flex-wrap: wrap;
+    }
+
+    .ocr-lang-select-wrap label { font-size: 13px; color: var(--text2); font-weight: 500; }
+
+    .ocr-lang-select {
+      padding: 7px 30px 7px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 13px; cursor: pointer;
+      appearance: none; outline: none;
+      transition: border-color var(--transition);
+    }
+
+    .ocr-lang-select:focus { border-color: var(--accent); }
+
+    .btn-extract {
+      padding: 9px 20px; border-radius: 9px;
+      background: linear-gradient(135deg, #6050e8, #4030c8);
+      color: #fff; border: none; cursor: pointer;
+      font-family: var(--font-head); font-size: 13px; font-weight: 700;
+      display: flex; align-items: center; gap: 8px;
+      transition: all var(--transition);
+    }
+
+    .btn-extract:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(96,80,232,0.35); }
+    .btn-extract:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* OCR Progress */
+    .ocr-progress { display: none; margin-bottom: 16px; }
+    .ocr-progress.visible { display: block; }
+
+    .ocr-progress-bar {
+      height: 4px; background: var(--border);
+      border-radius: 2px; overflow: hidden; margin-bottom: 6px;
+    }
+
+    .ocr-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #6050e8, #4030c8);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+
+    .ocr-progress-label { font-size: 12px; color: var(--text3); text-align: center; }
+
+    /* Camera Modal */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 1000;
+      display: none; align-items: center; justify-content: center;
+      backdrop-filter: blur(8px);
+      padding: 20px;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-lg);
+      width: 100%; max-width: 520px;
+      overflow: hidden;
+      animation: modal-in 0.25s ease;
+    }
+
+    @keyframes modal-in {
+      from { opacity: 0; transform: scale(0.95) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-title { font-family: var(--font-head); font-size: 16px; font-weight: 700; }
+
+    .modal-body { padding: 20px; }
+
+    .camera-video {
+      width: 100%; border-radius: var(--radius-sm);
+      background: #000; aspect-ratio: 4/3;
+      object-fit: cover; display: block;
+    }
+
+    .modal-footer {
+      padding: 14px 20px;
+      display: flex; gap: 10px; justify-content: flex-end;
+      border-top: 1px solid var(--border);
+    }
+
+    .btn-capture {
+      padding: 10px 22px; border-radius: 10px;
+      background: var(--accent); color: #fff;
+      border: none; cursor: pointer;
+      font-family: var(--font-head); font-size: 14px; font-weight: 700;
+      display: flex; align-items: center; gap: 8px;
+      transition: all var(--transition);
+    }
+
+    .btn-capture:hover { background: var(--accent2); }
+
+    /* ===================== HISTORY ===================== */
+    .history-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-top: 20px;
+      overflow: hidden;
+    }
+
+    .history-list { max-height: 360px; overflow-y: auto; }
+
+    .history-item {
+      display: flex; gap: 12px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer; transition: background var(--transition);
+      align-items: flex-start;
+    }
+
+    .history-item:last-child { border-bottom: none; }
+    .history-item:hover { background: var(--surface2); }
+
+    .history-langs {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.6px; color: var(--accent);
+      background: var(--accent-soft);
+      padding: 2px 7px; border-radius: 5px;
+      white-space: nowrap; flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .history-texts { flex: 1; min-width: 0; }
+
+    .history-source {
+      font-size: 13px; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      font-weight: 500; margin-bottom: 2px;
+    }
+
+    .history-target {
+      font-size: 12px; color: var(--text3);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .history-time {
+      font-size: 10px; color: var(--text3); white-space: nowrap;
+      flex-shrink: 0; margin-top: 4px;
+    }
+
+    .history-empty {
+      padding: 40px 20px; text-align: center;
+      color: var(--text3); font-size: 13px;
+    }
+
+    .history-empty-icon { font-size: 32px; margin-bottom: 8px; }
+
+    /* ===================== TOAST ===================== */
+    .toast-container {
+      position: fixed; bottom: 24px; right: 24px;
+      z-index: 9999; display: flex; flex-direction: column; gap: 10px;
+      pointer-events: none;
+    }
+
+    .toast {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px; border-radius: 12px;
+      background: var(--text); color: var(--bg);
+      font-size: 13px; font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      pointer-events: all; max-width: 320px;
+      animation: toast-in 0.3s ease;
+    }
+
+    .toast.success { background: #1d4d2e; color: #a8ebc4; }
+    .toast.error { background: #4d1d1d; color: #f0a0a0; }
+    .toast.info { background: #1d2d4d; color: #a0b8f0; }
+
+    [data-theme="dark"] .toast { background: #f0ede8; color: #1a1814; }
+    [data-theme="dark"] .toast.success { background: #1d4d2e; color: #a8ebc4; }
+    [data-theme="dark"] .toast.error { background: #4d1d1d; color: #f0a0a0; }
+    [data-theme="dark"] .toast.info { background: #1d2d4d; color: #a0b8f0; }
+
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes toast-out {
+      from { opacity: 1; transform: translateX(0); }
+      to { opacity: 0; transform: translateX(20px); }
+    }
+
+    /* ===================== API CONFIG MODAL ===================== */
+    .config-modal { max-width: 440px; }
+
+    .form-group { margin-bottom: 14px; }
+
+    .form-label {
+      display: block; font-size: 12px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      color: var(--text3); margin-bottom: 6px;
+    }
+
+    .form-input {
+      width: 100%; padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface2);
+      color: var(--text);
+      font-family: var(--font-body); font-size: 14px;
+      outline: none; transition: border-color var(--transition), box-shadow var(--transition);
+    }
+
+    .form-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    .form-note { font-size: 11px; color: var(--text3); margin-top: 5px; }
+    .form-note a { color: var(--accent); text-decoration: none; }
+    .form-note a:hover { text-decoration: underline; }
+
+    .security-note {
+      background: var(--red-soft); border: 1px solid rgba(192,57,43,0.2);
+      border-radius: var(--radius-sm); padding: 10px 12px;
+      font-size: 12px; color: var(--red); margin-top: 14px;
+      line-height: 1.5;
+    }
+
+    .btn-save {
+      padding: 10px 20px; border-radius: 10px;
+      background: var(--accent); color: #fff;
+      border: none; cursor: pointer;
+      font-family: var(--font-head); font-size: 14px; font-weight: 700;
+      transition: all var(--transition);
+    }
+
+    .btn-save:hover { background: var(--accent2); }
+
+    .btn-cancel {
+      padding: 10px 20px; border-radius: 10px;
+      border: 1px solid var(--border);
+      background: transparent;
+      cursor: pointer; font-size: 14px; font-weight: 500;
+      color: var(--text2); font-family: var(--font-body);
+      transition: all var(--transition);
+    }
+
+    .btn-cancel:hover { background: var(--surface2); }
+
+    /* ===================== FOOTER ===================== */
+    .footer {
+      text-align: center;
+      padding: 16px;
+      font-size: 11px;
+      color: var(--text3);
+      border-top: 1px solid var(--border);
+      margin-top: 40px;
+    }
+
+    /* ===================== UTILITIES ===================== */
+    .hidden { display: none !important; }
+
+    .flex-center { display: flex; align-items: center; justify-content: center; }
+
+    /* ===================== SCROLLBAR ===================== */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+    /* ===================== RESPONSIVE ===================== */
+    @media (max-width: 480px) {
+      .header { padding: 0 14px; }
+      .main { padding: 14px 12px 60px; }
+      .hero { padding: 20px 0 18px; }
+      .action-bar { gap: 8px; }
+      .hint-text { display: none; }
+      .toast-container { right: 12px; bottom: 16px; }
+      .ocr-actions { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="header">
+    <a class="logo" href="#">
+      <div class="logo-icon">🌐</div>
+      <span class="logo-text">Lingua<span>AI</span></span>
+    </a>
+    <div class="header-right">
+      <div class="status-dot" id="statusIndicator">
+        <div class="dot" id="statusDot"></div>
+        <span id="statusText">Online</span>
+      </div>
+      <button class="btn-icon" id="configBtn" title="API Settings" aria-label="API Settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 0 4.93 19.07M12 2v2M12 20v2M2 12h2M20 12h2"/>
+        </svg>
+      </button>
+      <button class="btn-icon" id="darkModeBtn" title="Toggle dark mode" aria-label="Toggle dark mode">
+        <svg id="darkIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+        <svg id="lightIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="hidden">
+          <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===================== MAIN ===================== -->
+  <main class="main">
+    <div class="hero">
+      <h1>Terjemahan <em>AI</em> yang Natural</h1>
+      <p>Tempel teks, unggah foto, atau ambil gambar — AI akan menerjemahkan secara kontekstual dan alami.</p>
+    </div>
+
+    <!-- Config Banner -->
+    <div class="config-banner" id="configBanner">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" color="var(--accent)">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <div>
+        <strong>Konfigurasi API Key diperlukan.</strong> Klik pengaturan atau tombol di samping untuk memasukkan API Key dari
+        <a href="https://openrouter.ai" target="_blank" style="color:var(--accent)">OpenRouter.ai</a>
+        (gratis). Tanpa API Key, translator tidak akan berfungsi.
+      </div>
+      <button class="btn-config" id="configBannerBtn">Set API Key</button>
+    </div>
+
+    <!-- ===================== TRANSLATOR CARD ===================== -->
+    <div class="translator-card">
+
+      <!-- Language Bar -->
+      <div class="lang-bar">
+        <div class="lang-select-wrap">
+          <select class="lang-select" id="sourceLang" aria-label="Source language">
+            <option value="auto">🔍 Deteksi Otomatis</option>
+            <option value="id">🇮🇩 Indonesia</option>
+            <option value="en">🇺🇸 Inggris</option>
+            <option value="ja">🇯🇵 Jepang</option>
+            <option value="ko">🇰🇷 Korea</option>
+            <option value="zh">🇨🇳 Mandarin</option>
+          </select>
+          <svg class="lang-select-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+
+        <button class="btn-swap" id="swapBtn" title="Swap languages" aria-label="Swap languages">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+          </svg>
+        </button>
+
+        <div class="lang-select-wrap">
+          <select class="lang-select" id="targetLang" aria-label="Target language">
+            <option value="id">🇮🇩 Indonesia</option>
+            <option value="en" selected>🇺🇸 Inggris</option>
+            <option value="ja">🇯🇵 Jepang</option>
+            <option value="ko">🇰🇷 Korea</option>
+            <option value="zh">🇨🇳 Mandarin</option>
+          </select>
+          <svg class="lang-select-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+
+      <!-- Panels -->
+      <div class="panels">
+        <!-- Source Panel -->
+        <div class="panel">
+          <div class="panel-label">Teks Sumber</div>
+          <textarea
+            class="textarea"
+            id="sourceText"
+            placeholder="Ketik atau paste teks di sini...&#10;&#10;Tips: Ctrl+Enter untuk translate"
+            maxlength="5000"
+            aria-label="Source text"
+          ></textarea>
+          <div class="panel-footer">
+            <span class="char-count" id="charCount">0 / 5000</span>
+            <button class="btn-sm" id="clearBtn" aria-label="Clear text">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              Hapus
+            </button>
+          </div>
+        </div>
+
+        <!-- Target Panel -->
+        <div class="panel">
+          <div class="panel-label">Hasil Terjemahan</div>
+          <!-- Output or skeleton -->
+          <div id="outputContainer" style="flex:1;display:flex;flex-direction:column;">
+            <textarea
+              class="textarea output-textarea"
+              id="outputText"
+              placeholder="Hasil terjemahan akan muncul di sini..."
+              readonly
+              aria-label="Translated text"
+            ></textarea>
+            <div class="skeleton-lines hidden" id="skeletonLoader">
+              <div class="skeleton-line" style="width:90%"></div>
+              <div class="skeleton-line" style="width:70%"></div>
+              <div class="skeleton-line" style="width:85%"></div>
+              <div class="skeleton-line" style="width:60%"></div>
+              <div class="skeleton-line" style="width:75%"></div>
+            </div>
+          </div>
+          <div class="panel-footer">
+            <span class="char-count" id="outputCharCount">0 karakter</span>
+            <button class="btn-sm" id="copyBtn" aria-label="Copy result">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Salin
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Bar -->
+      <div class="action-bar">
+        <button class="btn-translate" id="translateBtn" aria-label="Translate">
+          <svg class="btn-translate-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+          <div class="btn-translate-spinner"></div>
+          Terjemahkan
+        </button>
+
+        <label class="auto-translate-wrap" title="Auto-translate saat mengetik (debounced 1.5s)">
+          <div class="toggle" id="autoTranslateToggle"></div>
+          <span>Auto</span>
+        </label>
+
+        <span class="hint-text">Ctrl+Enter</span>
+
+        <div class="action-bar-right">
+          <button class="btn-sm" id="historyToggleBtn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>
+            Riwayat
+          </button>
+        </div>
+      </div>
+
+    </div>
+    <!-- end translator-card -->
+
+    <!-- ===================== OCR SECTION ===================== -->
+    <div class="ocr-section">
+      <div class="section-header" id="ocrToggle">
+        <div class="section-header-icon">📷</div>
+        <div>
+          <div class="section-title">OCR & Camera Capture</div>
+          <div class="section-subtitle">Upload gambar atau foto langsung → ekstrak teks → terjemahkan</div>
+        </div>
+        <svg class="section-chevron" id="ocrChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+
+      <div class="ocr-body" id="ocrBody">
+        <!-- Upload Area -->
+        <div class="ocr-upload-area" id="uploadArea">
+          <input type="file" id="imageInput" accept="image/jpeg,image/png,image/webp" aria-label="Upload image" />
+          <div class="ocr-upload-icon">🖼️</div>
+          <h3>Drag & Drop atau Klik untuk Upload</h3>
+          <p>JPG, PNG, WEBP • Maks 10MB</p>
+        </div>
+
+        <div class="ocr-actions">
+          <button class="btn-camera" id="cameraBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+            </svg>
+            Ambil Foto (Kamera)
+          </button>
+
+          <div class="ocr-lang-select-wrap">
+            <label>Bahasa Gambar:</label>
+            <div style="position:relative">
+              <select class="ocr-lang-select" id="ocrLang">
+                <option value="jpn">🇯🇵 Jepang</option>
+                <option value="eng" selected>🇺🇸 Inggris</option>
+                <option value="ind">🇮🇩 Indonesia</option>
+                <option value="kor">🇰🇷 Korea</option>
+                <option value="chi_sim">🇨🇳 Mandarin (Simplified)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Image Preview -->
+        <div class="ocr-preview" id="ocrPreview">
+          <img id="ocrPreviewImg" src="" alt="Preview gambar" />
+          <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <button class="btn-extract" id="extractBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              Ekstrak Teks
+            </button>
+            <button class="btn-sm" id="removeImageBtn">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              Hapus Gambar
+            </button>
+          </div>
+        </div>
+
+        <!-- OCR Progress -->
+        <div class="ocr-progress" id="ocrProgress">
+          <div class="ocr-progress-bar">
+            <div class="ocr-progress-fill" id="ocrProgressFill"></div>
+          </div>
+          <div class="ocr-progress-label" id="ocrProgressLabel">Menginisialisasi OCR...</div>
+        </div>
+
+      </div>
+    </div>
+    <!-- end ocr-section -->
+
+    <!-- ===================== HISTORY SECTION ===================== -->
+    <div class="history-section hidden" id="historySection">
+      <div class="section-header" style="cursor:default">
+        <div class="section-header-icon" style="background:linear-gradient(135deg,#e09040,#c07020)">🕐</div>
+        <div>
+          <div class="section-title">Riwayat Terjemahan</div>
+          <div class="section-subtitle">Klik untuk memuat ulang</div>
+        </div>
+        <button class="btn-sm" id="clearHistoryBtn" style="margin-left:auto">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          Hapus Semua
+        </button>
+      </div>
+      <div class="history-list" id="historyList">
+        <div class="history-empty" id="historyEmpty">
+          <div class="history-empty-icon">📋</div>
+          <div>Belum ada riwayat terjemahan</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="footer">
+    LinguaAI &mdash; Powered by AI &bull; OCR by Tesseract.js &bull; Siap deploy ke GitHub Pages
+  </footer>
+
+  <!-- ===================== CAMERA MODAL ===================== -->
+  <div class="modal-overlay" id="cameraModal">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">📷 Ambil Foto</span>
+        <button class="btn-icon" id="closeCameraModal" aria-label="Close camera">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <video class="camera-video" id="cameraVideo" autoplay playsinline muted></video>
+        <canvas id="cameraCanvas" class="hidden"></canvas>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" id="closeCameraBtn">Batal</button>
+        <button class="btn-capture" id="captureBtn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M20 7h-3.5L14 4H10L7.5 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg>
+          Ambil Foto
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== API CONFIG MODAL ===================== -->
+  <div class="modal-overlay" id="configModal">
+    <div class="modal config-modal">
+      <div class="modal-header">
+        <span class="modal-title">⚙️ Konfigurasi API</span>
+        <button class="btn-icon" id="closeConfigModal" aria-label="Close config">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="apiKeyInput">API Key</label>
+          <input class="form-input" type="password" id="apiKeyInput" placeholder="sk-or-v1-..." autocomplete="off" />
+          <div class="form-note">
+            Dapatkan API key gratis di <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a>.
+            API key disimpan di <code>localStorage</code> browser Anda.
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="apiUrlInput">API URL</label>
+          <input class="form-input" type="text" id="apiUrlInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          <div class="form-note">Default: <code>https://openrouter.ai/api/v1/chat/completions</code></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="modelInput">Model AI</label>
+          <input class="form-input" type="text" id="modelInput" placeholder="openai/gpt-4o-mini" />
+          <div class="form-note">
+            Contoh: <code>openai/gpt-4o-mini</code>, <code>google/gemini-flash-1.5</code>, <code>meta-llama/llama-3.1-8b-instruct:free</code>
+          </div>
+        </div>
+        <div class="security-note">
+          ⚠️ <strong>Perhatian Keamanan:</strong> Menyimpan API key di frontend tidak aman untuk produksi. 
+          Gunakan Cloudflare Worker / backend proxy untuk menyembunyikan API key dari publik.
+        </div>
+        <div style="margin-top:12px;">
+          <button id="resetStorageBtn" style="width:100%;padding:9px;border-radius:9px;border:1px solid var(--red);background:var(--red-soft);color:var(--red);font-family:var(--font-body);font-size:13px;font-weight:600;cursor:pointer;">
+            🗑️ Reset &amp; Hapus Semua Data Tersimpan
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" id="cancelConfigBtn">Batal</button>
+        <button class="btn-save" id="saveConfigBtn">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== TOAST CONTAINER ===================== -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <!-- ===================== JAVASCRIPT ===================== -->
+  <script>
+  /* ===================================================
+     LinguaAI — Main Application Script
+     Version: 1.0.0
+     ================================================= */
+
+  // ---- CONFIG (edit sesuai kebutuhan) ----
+  const DEFAULT_CONFIG = {
+    API_URL: "https://openrouter.ai/api/v1/chat/completions",
+    API_KEY: "",  // Paste API key di sini atau gunakan UI Settings
+    MODEL: "google/gemini-2.0-flash-exp:free"
+  };
+
+  const LANG_NAMES = {
+    auto: "Deteksi Otomatis",
+    id: "Bahasa Indonesia",
+    en: "English",
+    ja: "Japanese",
+    ko: "Korean",
+    zh: "Mandarin Chinese"
+  };
+
+  const MAX_HISTORY = 30;
+  const AUTO_TRANSLATE_DELAY = 1500;
+
+  // ---- State ----
+  let autoTranslateEnabled = false;
+  let autoTranslateTimer = null;
+  let isTranslating = false;
+  let cameraStream = null;
+  let history = [];
+  let currentConfig = { ...DEFAULT_CONFIG };
+
+  // ---- DOM Refs ----
+  const $ = id => document.getElementById(id);
+  const sourceText = $('sourceText');
+  const outputText = $('outputText');
+  const sourceLang = $('sourceLang');
+  const targetLang = $('targetLang');
+  const translateBtn = $('translateBtn');
+  const charCount = $('charCount');
+  const outputCharCount = $('outputCharCount');
+  const skeletonLoader = $('skeletonLoader');
+  const autoTranslateToggle = $('autoTranslateToggle');
+  const configBanner = $('configBanner');
+
+  /* ===================== INITIALIZATION ===================== */
+  function init() {
+    loadConfig();
+    loadHistory();
+    loadLastTranslation();
+    updateCharCount();
+    updateStatusIndicator();
+    renderHistory();
+    updateConfigBannerVisibility();
+    bindEvents();
+    window.addEventListener('online', updateStatusIndicator);
+    window.addEventListener('offline', updateStatusIndicator);
+  }
+
+  /* ===================== CONFIG ===================== */
+  function loadConfig() {
+    try {
+      const saved = localStorage.getItem('linguaai_config');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        currentConfig = { ...DEFAULT_CONFIG, ...parsed };
+      }
+    } catch(e) {}
+    // Auto-fix jika URL salah (tanpa s)
+    if (!currentConfig.API_URL) currentConfig.API_URL = DEFAULT_CONFIG.API_URL;
+    if (currentConfig.API_URL.endsWith('/completion')) {
+      currentConfig.API_URL = currentConfig.API_URL + 's';
+    }
+    $('apiKeyInput').value = currentConfig.API_KEY || '';
+    $('apiUrlInput').value = currentConfig.API_URL;
+    $('modelInput').value = currentConfig.MODEL || DEFAULT_CONFIG.MODEL;
+  }
+
+  function saveConfig() {
+    currentConfig.API_KEY = $('apiKeyInput').value.trim();
+    let url = $('apiUrlInput').value.trim() || DEFAULT_CONFIG.API_URL;
+    // Auto-fix jika ketik 'completion' tanpa s
+    if (url.endsWith('/completion')) url = url + 's';
+    currentConfig.API_URL = url;
+    currentConfig.MODEL = $('modelInput').value.trim() || DEFAULT_CONFIG.MODEL;
+    localStorage.setItem('linguaai_config', JSON.stringify(currentConfig));
+    $('apiUrlInput').value = currentConfig.API_URL;
+    updateConfigBannerVisibility();
+  }
+
+  function updateConfigBannerVisibility() {
+    if (currentConfig.API_KEY && currentConfig.API_KEY !== 'PASTE_API_KEY_HERE') {
+      configBanner.style.display = 'none';
+    } else {
+      configBanner.style.display = 'flex';
+    }
+  }
+
+  /* ===================== DARK MODE ===================== */
+  (function initTheme() {
+    const saved = localStorage.getItem('linguaai_theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const theme = saved || (prefersDark ? 'dark' : 'light');
+    setTheme(theme);
+  })();
+
+  function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('linguaai_theme', theme);
+    $('darkIcon').classList.toggle('hidden', theme === 'dark');
+    $('lightIcon').classList.toggle('hidden', theme === 'light');
+  }
+
+  /* ===================== TRANSLATE ===================== */
+  async function translate() {
+    const text = sourceText.value.trim();
+    if (!text) { showToast('Masukkan teks terlebih dahulu.', 'info'); return; }
+    if (!currentConfig.API_KEY || currentConfig.API_KEY === 'PASTE_API_KEY_HERE' || currentConfig.API_KEY.length < 10) {
+      showToast('Harap set API Key terlebih dahulu.', 'error');
+      openConfigModal();
+      return;
+    }
+    if (isTranslating) return;
+
+    const src = sourceLang.value;
+    const tgt = targetLang.value;
+
+    if (src !== 'auto' && src === tgt) {
+      showToast('Bahasa sumber dan tujuan sama.', 'info');
+      return;
+    }
+
+    isTranslating = true;
+    setLoadingState(true);
+
+    // Debug info
+    const debugUrl = currentConfig.API_URL;
+    const debugModel = currentConfig.MODEL;
+    const debugKeyPreview = currentConfig.API_KEY.substring(0, 12) + '...';
+    console.log('Translate config:', { url: debugUrl, model: debugModel, key: debugKeyPreview });
+
+    const systemPrompt = `You are a professional translator. Translate naturally and contextually. Preserve meaning and tone. Do not explain anything. Output ONLY the translated text, nothing else.`;
+
+    const srcLabel = src === 'auto' ? 'the detected language' : LANG_NAMES[src] || src;
+    const tgtLabel = LANG_NAMES[tgt] || tgt;
+    const userMsg = `Translate the following text from ${srcLabel} to ${tgtLabel}:\n\n${text}`;
+
+    // Deteksi apakah pakai Google AI Studio atau OpenRouter
+    const isGoogleAPI = debugUrl.includes('googleapis.com');
+
+    try {
+      let response;
+
+      if (isGoogleAPI) {
+        // Google AI Studio — pakai native Gemini API format
+        const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/${debugModel}:generateContent?key=${currentConfig.API_KEY}`;
+        response = await fetch(googleUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: systemPrompt + '\n\n' + userMsg }] }],
+            generationConfig: { maxOutputTokens: 2000, temperature: 0.3 }
+          })
+        });
+
+        console.log('Google API response status:', response.status);
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          const errMsg = errData?.error?.message || `HTTP ${response.status}`;
+          throw new Error(`[${response.status}] ${errMsg}`);
+        }
+
+        const data = await response.json();
+        const result = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+        if (!result) throw new Error('Respons kosong dari Google API.');
+
+        outputText.value = result;
+        outputText.style.display = 'block';
+        autoResizeTextarea(outputText);
+        outputCharCount.textContent = `${result.length} karakter`;
+        addToHistory(text, result, src, tgt);
+        saveLastTranslation(text, result);
+        showToast('Terjemahan selesai!', 'success');
+
+      } else {
+        // OpenRouter / OpenAI compatible
+        response = await fetch(debugUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${currentConfig.API_KEY}`,
+            'HTTP-Referer': window.location.href,
+            'X-Title': 'LinguaAI Translator'
+          },
+          body: JSON.stringify({
+            model: debugModel,
+            max_tokens: 2000,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userMsg }
+            ]
+          })
+        });
+
+        console.log('OpenRouter response status:', response.status);
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          const errMsg = errData?.error?.message || `HTTP ${response.status}`;
+          throw new Error(`[${response.status}] ${errMsg}`);
+        }
+
+        const data = await response.json();
+        const result = data?.choices?.[0]?.message?.content?.trim();
+        if (!result) throw new Error('Respons kosong dari API.');
+
+        outputText.value = result;
+        outputText.style.display = 'block';
+        autoResizeTextarea(outputText);
+        outputCharCount.textContent = `${result.length} karakter`;
+        addToHistory(text, result, src, tgt);
+        saveLastTranslation(text, result);
+        showToast('Terjemahan selesai!', 'success');
+      }
+
+    } catch(err) {
+      console.error('Translation error:', err);
+      let msg = err.message || 'Terjadi kesalahan tidak diketahui.';
+      showToast('Error: ' + msg, 'error');
+      outputText.value = 'ERROR:\n' + msg + '\n\nURL: ' + debugUrl + '\nModel: ' + debugModel;
+      outputText.style.display = 'block';
+    } finally {
+      isTranslating = false;
+      setLoadingState(false);
+    }
+  }
+
+  function setLoadingState(loading) {
+    if (loading) {
+      translateBtn.classList.add('loading');
+      translateBtn.disabled = true;
+      outputText.style.display = 'none';
+      skeletonLoader.classList.remove('hidden');
+    } else {
+      translateBtn.classList.remove('loading');
+      translateBtn.disabled = false;
+      skeletonLoader.classList.add('hidden');
+      outputText.style.display = 'block';
+    }
+  }
+
+  /* ===================== AUTO RESIZE ===================== */
+  function autoResizeTextarea(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.max(220, el.scrollHeight) + 'px';
+  }
+
+  /* ===================== CHAR COUNT ===================== */
+  function updateCharCount() {
+    const len = sourceText.value.length;
+    charCount.textContent = `${len} / 5000`;
+    charCount.className = 'char-count';
+    if (len > 4000) charCount.classList.add('warn');
+    if (len >= 5000) charCount.classList.add('max');
+  }
+
+  /* ===================== SWAP LANGUAGES ===================== */
+  function swapLanguages() {
+    const srcVal = sourceLang.value;
+    const tgtVal = targetLang.value;
+    const srcText = sourceText.value;
+    const tgtTextVal = outputText.value;
+
+    if (srcVal === 'auto') {
+      showToast('Tidak dapat swap saat mode Deteksi Otomatis.', 'info');
+      return;
+    }
+
+    sourceLang.value = tgtVal;
+    targetLang.value = srcVal;
+    sourceText.value = tgtTextVal;
+    outputText.value = srcText;
+    updateCharCount();
+    autoResizeTextarea(sourceText);
+    autoResizeTextarea(outputText);
+    outputCharCount.textContent = `${srcText.length} karakter`;
+  }
+
+  /* ===================== STATUS ===================== */
+  function updateStatusIndicator() {
+    const online = navigator.onLine;
+    $('statusDot').className = online ? 'dot' : 'dot offline';
+    $('statusText').textContent = online ? 'Online' : 'Offline';
+  }
+
+  /* ===================== HISTORY ===================== */
+  function addToHistory(source, target, srcLang, tgtLang) {
+    const item = {
+      id: Date.now(),
+      source: source.substring(0, 200),
+      target: target.substring(0, 200),
+      srcLang,
+      tgtLang,
+      time: new Date().toISOString()
+    };
+    history.unshift(item);
+    if (history.length > MAX_HISTORY) history = history.slice(0, MAX_HISTORY);
+    saveHistory();
+    renderHistory();
+  }
+
+  function saveHistory() {
+    try { localStorage.setItem('linguaai_history', JSON.stringify(history)); } catch(e) {}
+  }
+
+  function loadHistory() {
+    try {
+      const saved = localStorage.getItem('linguaai_history');
+      if (saved) history = JSON.parse(saved);
+    } catch(e) { history = []; }
+  }
+
+  function clearHistory() {
+    history = [];
+    saveHistory();
+    renderHistory();
+    showToast('Riwayat dihapus.', 'info');
+  }
+
+  function renderHistory() {
+    const list = $('historyList');
+    const empty = $('historyEmpty');
+    const items = history.filter(h => h && h.source);
+
+    if (items.length === 0) {
+      empty.style.display = 'block';
+      const oldItems = list.querySelectorAll('.history-item');
+      oldItems.forEach(i => i.remove());
+      return;
+    }
+
+    empty.style.display = 'none';
+    list.innerHTML = '';
+    list.appendChild(empty);
+
+    items.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'history-item';
+      const srcLbl = (LANG_NAMES[item.srcLang] || item.srcLang || '?').split(' ').pop();
+      const tgtLbl = (LANG_NAMES[item.tgtLang] || item.tgtLang || '?').split(' ').pop();
+      const timeStr = formatTime(item.time);
+      el.innerHTML = `
+        <span class="history-langs">${srcLbl} → ${tgtLbl}</span>
+        <div class="history-texts">
+          <div class="history-source">${escapeHtml(item.source)}</div>
+          <div class="history-target">${escapeHtml(item.target)}</div>
+        </div>
+        <span class="history-time">${timeStr}</span>
+      `;
+      el.addEventListener('click', () => loadHistoryItem(item));
+      list.appendChild(el);
+    });
+  }
+
+  function loadHistoryItem(item) {
+    sourceText.value = item.source;
+    outputText.value = item.target;
+    if (item.srcLang && item.srcLang !== 'auto') sourceLang.value = item.srcLang;
+    if (item.tgtLang) targetLang.value = item.tgtLang;
+    updateCharCount();
+    autoResizeTextarea(sourceText);
+    autoResizeTextarea(outputText);
+    outputCharCount.textContent = `${item.target.length} karakter`;
+    showToast('Riwayat dimuat.', 'info');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function formatTime(iso) {
+    try {
+      const d = new Date(iso);
+      const now = new Date();
+      const diff = now - d;
+      if (diff < 60000) return 'Baru saja';
+      if (diff < 3600000) return `${Math.floor(diff/60000)} mnt lalu`;
+      if (diff < 86400000) return `${Math.floor(diff/3600000)} jam lalu`;
+      return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+    } catch(e) { return ''; }
+  }
+
+  /* ===================== LAST TRANSLATION ===================== */
+  function saveLastTranslation(src, tgt) {
+    try {
+      localStorage.setItem('linguaai_last', JSON.stringify({
+        source: src, target: tgt,
+        srcLang: sourceLang.value, tgtLang: targetLang.value
+      }));
+    } catch(e) {}
+  }
+
+  function loadLastTranslation() {
+    try {
+      const saved = localStorage.getItem('linguaai_last');
+      if (saved) {
+        const data = JSON.parse(saved);
+        sourceText.value = data.source || '';
+        outputText.value = data.target || '';
+        if (data.srcLang) sourceLang.value = data.srcLang;
+        if (data.tgtLang) targetLang.value = data.tgtLang;
+        updateCharCount();
+        if (data.source) autoResizeTextarea(sourceText);
+        if (data.target) {
+          autoResizeTextarea(outputText);
+          outputCharCount.textContent = `${(data.target || '').length} karakter`;
+        }
+      }
+    } catch(e) {}
+  }
+
+  /* ===================== OCR ===================== */
+  let currentImageFile = null;
+
+  function handleImageFile(file) {
+    if (!file) return;
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowed.includes(file.type)) {
+      showToast('Format tidak didukung. Gunakan JPG, PNG, atau WEBP.', 'error');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      showToast('Ukuran file terlalu besar (maks 10MB).', 'error');
+      return;
+    }
+    currentImageFile = file;
+    const reader = new FileReader();
+    reader.onload = e => {
+      $('ocrPreviewImg').src = e.target.result;
+      $('ocrPreview').classList.add('visible');
+    };
+    reader.readAsDataURL(file);
+    showToast('Gambar dimuat. Klik "Ekstrak Teks" untuk OCR.', 'info');
+  }
+
+  async function runOCR() {
+    if (!currentImageFile) {
+      showToast('Tidak ada gambar untuk diekstrak.', 'error');
+      return;
+    }
+
+    const lang = $('ocrLang').value;
+    const extractBtn = $('extractBtn');
+    extractBtn.disabled = true;
+
+    const progress = $('ocrProgress');
+    const fill = $('ocrProgressFill');
+    const label = $('ocrProgressLabel');
+
+    progress.classList.add('visible');
+    fill.style.width = '0%';
+    label.textContent = 'Menginisialisasi Tesseract...';
+
+    try {
+      const { createWorker } = Tesseract;
+      const worker = await createWorker(lang, 1, {
+        logger: m => {
+          if (m.status === 'recognizing text') {
+            const pct = Math.round(m.progress * 100);
+            fill.style.width = pct + '%';
+            label.textContent = `Mengenali teks... ${pct}%`;
+          } else if (m.status === 'loading tesseract core') {
+            fill.style.width = '10%';
+            label.textContent = 'Memuat Tesseract Core...';
+          } else if (m.status === 'initializing tesseract') {
+            fill.style.width = '20%';
+            label.textContent = 'Menginisialisasi...';
+          } else if (m.status === 'loading language traineddata') {
+            fill.style.width = '40%';
+            label.textContent = `Memuat data bahasa (${lang})...`;
+          } else if (m.status === 'initialized tesseract') {
+            fill.style.width = '60%';
+            label.textContent = 'Siap mengenali...';
+          }
+        }
+      });
+
+      const { data: { text } } = await worker.recognize(currentImageFile);
+      await worker.terminate();
+
+      fill.style.width = '100%';
+      label.textContent = 'Selesai!';
+
+      const cleaned = text.trim();
+      if (!cleaned) {
+        showToast('Tidak ada teks yang terdeteksi dalam gambar.', 'error');
+        return;
+      }
+
+      sourceText.value = cleaned;
+      updateCharCount();
+      autoResizeTextarea(sourceText);
+      showToast(`OCR berhasil! ${cleaned.length} karakter diekstrak.`, 'success');
+
+      setTimeout(() => {
+        progress.classList.remove('visible');
+      }, 1500);
+
+    } catch(err) {
+      console.error('OCR error:', err);
+      showToast('OCR gagal: ' + (err.message || 'Kesalahan tidak diketahui'), 'error');
+      progress.classList.remove('visible');
+    } finally {
+      extractBtn.disabled = false;
+    }
+  }
+
+  /* ===================== CAMERA ===================== */
+  async function openCamera() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      cameraStream = stream;
+      $('cameraVideo').srcObject = stream;
+      $('cameraModal').classList.add('open');
+    } catch(err) {
+      if (err.name === 'NotAllowedError') showToast('Akses kamera ditolak. Izinkan akses kamera.', 'error');
+      else if (err.name === 'NotFoundError') showToast('Kamera tidak ditemukan.', 'error');
+      else showToast('Tidak dapat membuka kamera: ' + err.message, 'error');
+    }
+  }
+
+  function capturePhoto() {
+    const video = $('cameraVideo');
+    const canvas = $('cameraCanvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    canvas.toBlob(blob => {
+      const file = new File([blob], 'capture.jpg', { type: 'image/jpeg' });
+      handleImageFile(file);
+      closeCameraModal();
+    }, 'image/jpeg', 0.92);
+  }
+
+  function closeCameraModal() {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(t => t.stop());
+      cameraStream = null;
+    }
+    $('cameraVideo').srcObject = null;
+    $('cameraModal').classList.remove('open');
+  }
+
+  /* ===================== TOAST ===================== */
+  function showToast(msg, type = 'default') {
+    const container = $('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+
+    const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : type === 'info' ? 'ℹ' : '●';
+    toast.innerHTML = `<span>${icon}</span><span>${escapeHtml(msg)}</span>`;
+
+    container.appendChild(toast);
+    setTimeout(() => {
+      toast.style.animation = 'toast-out 0.3s ease forwards';
+      setTimeout(() => toast.remove(), 300);
+    }, 3200);
+  }
+
+  /* ===================== MODAL HELPERS ===================== */
+  function openConfigModal() {
+    $('apiKeyInput').value = currentConfig.API_KEY || '';
+    $('apiUrlInput').value = currentConfig.API_URL || DEFAULT_CONFIG.API_URL;
+    $('modelInput').value = currentConfig.MODEL || DEFAULT_CONFIG.MODEL;
+    $('configModal').classList.add('open');
+  }
+
+  function closeConfigModal() {
+    $('configModal').classList.remove('open');
+  }
+
+  /* ===================== UTILS ===================== */
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  async function copyToClipboard(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('Teks disalin!', 'success');
+    } catch(e) {
+      // fallback
+      const el = document.createElement('textarea');
+      el.value = text;
+      el.style.position = 'fixed';
+      el.style.opacity = '0';
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      showToast('Teks disalin!', 'success');
+    }
+  }
+
+  /* ===================== EVENT BINDINGS ===================== */
+  function bindEvents() {
+
+    // Dark Mode
+    $('darkModeBtn').addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      setTheme(current === 'dark' ? 'light' : 'dark');
+    });
+
+    // Translate Button
+    translateBtn.addEventListener('click', translate);
+
+    // Keyboard shortcut Ctrl+Enter
+    sourceText.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        translate();
+      }
+    });
+
+    // Source text input
+    sourceText.addEventListener('input', () => {
+      updateCharCount();
+      autoResizeTextarea(sourceText);
+      if (autoTranslateEnabled) {
+        clearTimeout(autoTranslateTimer);
+        autoTranslateTimer = setTimeout(() => {
+          if (sourceText.value.trim().length > 2) translate();
+        }, AUTO_TRANSLATE_DELAY);
+      }
+    });
+
+    // Clear
+    $('clearBtn').addEventListener('click', () => {
+      sourceText.value = '';
+      outputText.value = '';
+      outputCharCount.textContent = '0 karakter';
+      updateCharCount();
+      autoResizeTextarea(sourceText);
+      autoResizeTextarea(outputText);
+    });
+
+    // Copy
+    $('copyBtn').addEventListener('click', () => {
+      const text = outputText.value.trim();
+      if (!text) { showToast('Tidak ada teks untuk disalin.', 'info'); return; }
+      copyToClipboard(text);
+    });
+
+    // Swap
+    $('swapBtn').addEventListener('click', swapLanguages);
+
+    // Auto translate toggle
+    autoTranslateToggle.addEventListener('click', () => {
+      autoTranslateEnabled = !autoTranslateEnabled;
+      autoTranslateToggle.classList.toggle('on', autoTranslateEnabled);
+      showToast(autoTranslateEnabled ? 'Auto-translate aktif.' : 'Auto-translate nonaktif.', 'info');
+    });
+
+    // Config
+    $('configBtn').addEventListener('click', openConfigModal);
+    $('configBannerBtn').addEventListener('click', openConfigModal);
+    $('closeConfigModal').addEventListener('click', closeConfigModal);
+    $('cancelConfigBtn').addEventListener('click', closeConfigModal);
+    $('saveConfigBtn').addEventListener('click', () => {
+      const key = $('apiKeyInput').value.trim();
+      if (!key) { showToast('API Key tidak boleh kosong.', 'error'); return; }
+      saveConfig();
+      closeConfigModal();
+      showToast('Konfigurasi tersimpan!', 'success');
+    });
+
+    $('configModal').addEventListener('click', e => {
+      if (e.target === $('configModal')) closeConfigModal();
+    });
+
+    // OCR Toggle
+    $('ocrToggle').addEventListener('click', () => {
+      const body = $('ocrBody');
+      const chevron = $('ocrChevron');
+      const isOpen = body.classList.contains('open');
+      body.classList.toggle('open', !isOpen);
+      chevron.classList.toggle('open', !isOpen);
+    });
+
+    // Image upload
+    $('imageInput').addEventListener('change', e => {
+      if (e.target.files[0]) handleImageFile(e.target.files[0]);
+    });
+
+    // Drag & Drop
+    const uploadArea = $('uploadArea');
+    uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+    uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+    uploadArea.addEventListener('drop', e => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) handleImageFile(file);
+    });
+
+    // Extract OCR
+    $('extractBtn').addEventListener('click', runOCR);
+
+    // Remove image
+    $('removeImageBtn').addEventListener('click', () => {
+      currentImageFile = null;
+      $('ocrPreview').classList.remove('visible');
+      $('ocrPreviewImg').src = '';
+      $('imageInput').value = '';
+    });
+
+    // Camera
+    $('cameraBtn').addEventListener('click', openCamera);
+    $('captureBtn').addEventListener('click', capturePhoto);
+    $('closeCameraModal').addEventListener('click', closeCameraModal);
+    $('closeCameraBtn').addEventListener('click', closeCameraModal);
+    $('cameraModal').addEventListener('click', e => {
+      if (e.target === $('cameraModal')) closeCameraModal();
+    });
+
+    // History
+    $('historyToggleBtn').addEventListener('click', () => {
+      const section = $('historySection');
+      const hidden = section.classList.contains('hidden');
+      section.classList.toggle('hidden', !hidden);
+      if (hidden) renderHistory();
+    });
+
+    $('clearHistoryBtn').addEventListener('click', clearHistory);
+
+    // Escape key closes modals
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closeConfigModal();
+        closeCameraModal();
+      }
+    });
+
+    // Reset storage button
+    $('resetStorageBtn').addEventListener('click', () => {
+      if (confirm('Yakin ingin reset? API key dan riwayat terjemahan akan terhapus. Teks di layar tidak berubah.')) {
+        localStorage.removeItem('linguaai_config');
+        localStorage.removeItem('linguaai_history');
+        localStorage.removeItem('linguaai_last');
+        currentConfig = { ...DEFAULT_CONFIG };
+        history = [];
+        $('apiKeyInput').value = '';
+        $('apiUrlInput').value = DEFAULT_CONFIG.API_URL;
+        $('modelInput').value = DEFAULT_CONFIG.MODEL;
+        renderHistory();
+        updateConfigBannerVisibility();
+        closeConfigModal();
+        showToast('Config direset. Silakan masukkan API key baru.', 'info');
+      }
+    });
+  }
+
+  // ---- Bootstrap ----
+  document.addEventListener('DOMContentLoaded', init);
+  </script>
+
+</body>
+</html>
