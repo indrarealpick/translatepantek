@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>LinguaAI — AI Translator</title>
+<meta name="description" content="Translator AI modern — Google Gemini & OpenRouter"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<style>
+:root{
+  --bg:#0f0f13;--bg2:#18181f;--surface:#1e1e28;--surface2:#252530;
+  --border:#2e2e3a;--border2:#3a3a48;--text:#f0ede8;--text2:#a0a0b0;--text3:#60606e;
+  --accent:#e07840;--accent2:#c96030;--accent-soft:rgba(224,120,64,0.12);
+  --green:#4aaa6e;--green-soft:rgba(74,170,110,0.12);
+  --red:#e05050;--red-soft:rgba(224,80,80,0.1);
+  --shadow:0 2px 16px rgba(0,0,0,0.3);--shadow-lg:0 8px 40px rgba(0,0,0,0.4);
+  --radius:16px;--radius-sm:10px;
+  --font-head:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;
+  --tr:0.2s cubic-bezier(0.4,0,0.2,1);
+}
+[data-theme="light"]{
+  --bg:#f0ede8;--bg2:#e8e4dd;--surface:#faf9f7;--surface2:#f2efe9;
+  --border:#ddd9d0;--border2:#ccc8be;--text:#1a1814;--text2:#5a5550;--text3:#9a9590;
+  --accent:#c9622a;--accent2:#a84d1e;--accent-soft:rgba(201,98,42,0.12);
+  --green:#3a8a5a;--green-soft:rgba(58,138,90,0.12);
+  --red:#c0392b;--red-soft:rgba(192,57,43,0.1);
+  --shadow:0 2px 16px rgba(0,0,0,0.06);--shadow-lg:0 8px 40px rgba(0,0,0,0.10);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;line-height:1.6;transition:background var(--tr),color var(--tr)}
+
+/* HEADER */
+.header{position:sticky;top:0;z-index:100;height:58px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;background:var(--surface);border-bottom:1px solid var(--border);backdrop-filter:blur(20px)}
+.logo{display:flex;align-items:center;gap:9px;text-decoration:none}
+.logo-icon{width:30px;height:30px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.logo-text{font-family:var(--font-head);font-size:17px;font-weight:700;color:var(--text);letter-spacing:-0.3px}
+.logo-text span{color:var(--accent)}
+.header-right{display:flex;align-items:center;gap:10px}
+
+.btn-icon{width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--tr);color:var(--text2)}
+.btn-icon:hover{background:var(--border2);color:var(--text)}
+
+/* MAIN */
+.main{max-width:1080px;margin:0 auto;padding:20px 16px 60px}
+.hero{text-align:center;padding:28px 0 22px}
+.hero h1{font-family:var(--font-head);font-size:clamp(26px,5vw,42px);font-weight:800;letter-spacing:-1px;line-height:1.1;margin-bottom:8px}
+.hero h1 em{font-style:normal;background:linear-gradient(135deg,var(--accent),#e8a060);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{color:var(--text2);font-size:14px;max-width:440px;margin:0 auto}
+
+/* BANNER */
+.banner{background:var(--accent-soft);border:1px solid rgba(224,120,64,0.2);border-radius:var(--radius-sm);padding:11px 14px;display:flex;align-items:center;gap:10px;margin-bottom:16px;font-size:13px;color:var(--text2)}
+.banner a{color:var(--accent);text-decoration:none}
+.banner-btn{margin-left:auto;flex-shrink:0;padding:5px 12px;border-radius:7px;background:var(--accent);color:#fff;border:none;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font-body);transition:all var(--tr);white-space:nowrap}
+.banner-btn:hover{background:var(--accent2)}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px}
+
+/* LANG BAR */
+.lang-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.sel-wrap{flex:1;position:relative}
+.sel{width:100%;padding:8px 32px 8px 11px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-family:var(--font-body);font-size:13px;font-weight:500;cursor:pointer;appearance:none;outline:none;transition:border-color var(--tr),box-shadow var(--tr)}
+.sel:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.sel-arrow{position:absolute;right:9px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text3)}
+.btn-swap{width:36px;height:36px;border-radius:9px;border:1px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--tr);color:var(--text2);flex-shrink:0}
+.btn-swap:hover{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);transform:rotate(180deg)}
+
+/* PANELS */
+.panels{display:grid;grid-template-columns:1fr 1fr;min-height:260px}
+@media(max-width:640px){.panels{grid-template-columns:1fr}}
+.panel{display:flex;flex-direction:column}
+.panel:first-child{border-right:1px solid var(--border)}
+@media(max-width:640px){.panel:first-child{border-right:none;border-bottom:1px solid var(--border)}}
+.panel-label{padding:9px 14px 0;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:var(--text3)}
+.ta{flex:1;min-height:200px;width:100%;padding:10px 14px;border:none;background:transparent;color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.7;resize:none;outline:none}
+.ta::placeholder{color:var(--text3)}
+.ta-out{color:var(--text2)}
+.romaji-box{display:none;padding:8px 14px 10px;border-top:1px solid var(--border);background:var(--surface2)}
+.skeleton{padding:12px 14px;flex:1;display:flex;flex-direction:column;gap:9px}
+.sk-line{height:13px;border-radius:5px;background:linear-gradient(90deg,var(--surface2) 25%,var(--border) 50%,var(--surface2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.panel-foot{display:flex;align-items:center;gap:7px;padding:7px 11px;border-top:1px solid var(--border);background:var(--surface2)}
+.char{font-size:11px;color:var(--text3);margin-right:auto}
+.char.warn{color:#e08030}.char.max{color:var(--red)}
+.btn-sm{padding:5px 9px;border-radius:7px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:12px;font-weight:500;color:var(--text2);font-family:var(--font-body);display:flex;align-items:center;gap:4px;transition:all var(--tr)}
+.btn-sm:hover{background:var(--surface);color:var(--text);border-color:var(--border2)}
+
+/* ACTION BAR */
+.action-bar{display:flex;align-items:center;gap:9px;padding:12px 14px;border-top:1px solid var(--border);background:var(--surface2);flex-wrap:wrap}
+.btn-tr{padding:10px 22px;border-radius:10px;background:var(--accent);color:#fff;border:none;cursor:pointer;font-family:var(--font-head);font-size:14px;font-weight:700;display:flex;align-items:center;gap:7px;transition:all var(--tr);position:relative;overflow:hidden}
+.btn-tr:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 16px rgba(201,98,42,0.35)}
+.btn-tr:active{transform:translateY(0)}
+.btn-tr:disabled{opacity:0.6;cursor:not-allowed;transform:none;box-shadow:none}
+.spin{width:13px;height:13px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn-tr.loading .spin{display:block}
+.btn-tr.loading .tr-icon{display:none}
+.auto-wrap{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);cursor:pointer;user-select:none}
+.toggle{width:32px;height:17px;border-radius:9px;background:var(--border2);position:relative;transition:background var(--tr);flex-shrink:0}
+.toggle::after{content:'';position:absolute;width:13px;height:13px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left var(--tr);box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+.toggle.on{background:var(--accent)}
+.toggle.on::after{left:17px}
+.hint{font-size:11px;color:var(--text3)}
+.ml-auto{margin-left:auto}
+
+/* OCR */
+.sec-head{display:flex;align-items:center;gap:9px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;background:var(--surface2);user-select:none}
+.sec-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.sec-title{font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--text)}
+.sec-sub{font-size:11px;color:var(--text3)}
+.chevron{margin-left:auto;color:var(--text3);transition:transform var(--tr)}
+.chevron.open{transform:rotate(180deg)}
+.sec-body{display:none;padding:16px}
+.sec-body.open{display:block}
+.upload-area{border:2px dashed var(--border2);border-radius:var(--radius-sm);padding:28px 16px;text-align:center;cursor:pointer;transition:all var(--tr);background:var(--surface2);margin-bottom:14px;position:relative}
+.upload-area:hover,.upload-area.drag{border-color:var(--accent);background:var(--accent-soft)}
+.upload-area input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.upload-icon{font-size:32px;margin-bottom:8px}
+.upload-area h3{font-family:var(--font-head);font-size:14px;font-weight:700;margin-bottom:4px}
+.upload-area p{font-size:12px;color:var(--text3)}
+.ocr-actions{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.btn-cam{padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);font-family:var(--font-body);display:flex;align-items:center;gap:6px;transition:all var(--tr)}
+.btn-cam:hover{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.ocr-lang-wrap{display:flex;align-items:center;gap:8px}
+.ocr-lang-wrap label{font-size:12px;color:var(--text2);font-weight:500}
+.ocr-sel{padding:6px 26px 6px 9px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-family:var(--font-body);font-size:12px;cursor:pointer;appearance:none;outline:none}
+.preview{display:none;margin-bottom:14px}
+.preview.show{display:block}
+.preview img{max-width:100%;max-height:260px;border-radius:var(--radius-sm);border:1px solid var(--border);box-shadow:var(--shadow);display:block}
+.preview-actions{margin-top:9px;display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.btn-extract{padding:8px 18px;border-radius:8px;background:linear-gradient(135deg,#6050e8,#4030c8);color:#fff;border:none;cursor:pointer;font-family:var(--font-head);font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px;transition:all var(--tr)}
+.btn-extract:hover{opacity:0.9;transform:translateY(-1px)}
+.btn-extract:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.ocr-prog{display:none;margin-bottom:14px}
+.ocr-prog.show{display:block}
+.prog-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:5px}
+.prog-fill{height:100%;background:linear-gradient(90deg,#6050e8,#4030c8);border-radius:2px;transition:width 0.3s ease;width:0%}
+.prog-label{font-size:11px;color:var(--text3);text-align:center}
+
+/* HISTORY */
+.hist-list{max-height:340px;overflow-y:auto}
+.hist-item{display:flex;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background var(--tr);align-items:flex-start}
+.hist-item:last-child{border-bottom:none}
+.hist-item:hover{background:var(--surface2)}
+.hist-lang{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--accent);background:var(--accent-soft);padding:2px 6px;border-radius:4px;white-space:nowrap;flex-shrink:0;margin-top:2px}
+.hist-texts{flex:1;min-width:0}
+.hist-src{font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;margin-bottom:2px}
+.hist-tgt{font-size:12px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-time{font-size:10px;color:var(--text3);white-space:nowrap;flex-shrink:0;margin-top:3px}
+.hist-empty{padding:36px 16px;text-align:center;color:var(--text3);font-size:13px}
+.hist-empty-icon{font-size:30px;margin-bottom:7px}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(8px);padding:16px}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow-lg);width:100%;max-width:460px;overflow:hidden;animation:min 0.22s ease}
+@keyframes min{from{opacity:0;transform:scale(0.95) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)}
+.modal-title{font-family:var(--font-head);font-size:15px;font-weight:700}
+.modal-body{padding:18px}
+.modal-foot{padding:12px 18px;display:flex;gap:9px;justify-content:flex-end;border-top:1px solid var(--border)}
+.cam-video{width:100%;border-radius:var(--radius-sm);background:#000;aspect-ratio:4/3;object-fit:cover;display:block}
+.btn-cap{padding:9px 20px;border-radius:9px;background:var(--accent);color:#fff;border:none;cursor:pointer;font-family:var(--font-head);font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px;transition:all var(--tr)}
+.btn-cap:hover{background:var(--accent2)}
+.btn-cancel{padding:9px 18px;border-radius:9px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:13px;color:var(--text2);font-family:var(--font-body);transition:all var(--tr)}
+.btn-cancel:hover{background:var(--surface2)}
+
+/* CONFIG FORM */
+.fg{margin-bottom:13px}
+.fl{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text3);margin-bottom:5px}
+.fi{width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-family:var(--font-body);font-size:14px;outline:none;transition:border-color var(--tr),box-shadow var(--tr)}
+.fi:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.fn{font-size:11px;color:var(--text3);margin-top:4px}
+.fn a{color:var(--accent);text-decoration:none}
+.fn code{background:var(--surface2);border:1px solid var(--border);padding:1px 5px;border-radius:3px;font-size:11px}
+.sec-note{background:var(--red-soft);border:1px solid rgba(224,80,80,0.2);border-radius:var(--radius-sm);padding:9px 11px;font-size:12px;color:var(--red);margin-top:12px;line-height:1.5}
+.btn-save{padding:9px 18px;border-radius:9px;background:var(--accent);color:#fff;border:none;cursor:pointer;font-family:var(--font-head);font-size:14px;font-weight:700;transition:all var(--tr)}
+.btn-save:hover{background:var(--accent2)}
+.btn-reset{width:100%;margin-top:11px;padding:8px;border-radius:8px;border:1px solid var(--red);background:var(--red-soft);color:var(--red);font-family:var(--font-body);font-size:13px;font-weight:600;cursor:pointer;transition:all var(--tr)}
+.btn-reset:hover{background:rgba(224,80,80,0.18)}
+
+/* TOAST */
+.toasts{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{display:flex;align-items:center;gap:9px;padding:11px 14px;border-radius:11px;font-size:13px;font-weight:500;box-shadow:var(--shadow-lg);pointer-events:all;max-width:300px;animation:tin 0.25s ease}
+.toast.default{background:#f0ede8;color:#1a1814}
+[data-theme="dark"] .toast.default{background:#2a2a38;color:#f0ede8}
+.toast.success{background:#1d4d2e;color:#a8ebc4}
+.toast.error{background:#4d1d1d;color:#f0a0a0}
+.toast.info{background:#1d2d4d;color:#a0b8f0}
+@keyframes tin{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+@keyframes tout{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(16px)}}
+
+/* MISC */
+.hidden{display:none!important}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+.footer{text-align:center;padding:14px;font-size:11px;color:var(--text3);border-top:1px solid var(--border);margin-top:20px}
+@media(max-width:480px){.header{padding:0 12px}.main{padding:12px 10px 50px}.hint{display:none}.toasts{right:10px;bottom:14px}}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <a class="logo" href="#">
+    <div class="logo-icon">🌐</div>
+    <span class="logo-text">Lingua<span>AI</span></span>
+  </a>
+  <div class="header-right">
+
+    <button class="btn-icon" id="cfgBtn" title="Settings">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 0 4.93 19.07M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+    </button>
+    <button class="btn-icon" id="themeBtn" title="Toggle theme">
+      <svg id="moonIco" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg id="sunIco" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="hidden"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="main">
+  <div class="hero">
+    <h1>Terjemahan <em>AI</em> Natural</h1>
+    <p>Tempel teks atau upload foto — AI menerjemahkan secara kontekstual dan alami.</p>
+  </div>
+
+  <div class="banner" id="banner">
+    <span>⚙️ Belum ada API key. Klik untuk mengatur — gratis pakai <a href="https://aistudio.google.com" target="_blank">Google AI Studio</a> atau <a href="https://openrouter.ai" target="_blank">OpenRouter</a>.</span>
+    <button class="banner-btn" id="bannerBtn">Set API Key</button>
+  </div>
+
+  <!-- TRANSLATOR CARD -->
+  <div class="card">
+    <div class="lang-bar">
+      <div class="sel-wrap">
+        <select class="sel" id="srcLang">
+          <option value="auto">🔍 Deteksi Otomatis</option>
+          <option value="id">🇮🇩 Indonesia</option>
+          <option value="en">🇺🇸 Inggris</option>
+          <option value="ja">🇯🇵 Jepang</option>
+          <option value="ko">🇰🇷 Korea</option>
+          <option value="zh">🇨🇳 Mandarin</option>
+        </select>
+        <svg class="sel-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <button class="btn-swap" id="swapBtn" title="Tukar bahasa">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      </button>
+      <div class="sel-wrap">
+        <select class="sel" id="tgtLang">
+          <option value="id">🇮🇩 Indonesia</option>
+          <option value="en" selected>🇺🇸 Inggris</option>
+          <option value="ja">🇯🇵 Jepang</option>
+          <option value="ko">🇰🇷 Korea</option>
+          <option value="zh">🇨🇳 Mandarin</option>
+        </select>
+        <svg class="sel-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+    </div>
+
+    <div class="panels">
+      <div class="panel">
+        <div class="panel-label">Teks Sumber</div>
+        <textarea class="ta" id="srcTxt" placeholder="Ketik atau paste teks...&#10;Ctrl+Enter untuk translate" maxlength="5000"></textarea>
+        <div class="panel-foot">
+          <span class="char" id="charCnt">0 / 5000</span>
+          <button class="btn-sm" id="clearBtn">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Hapus
+          </button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-label">Hasil Terjemahan</div>
+        <div id="outWrap" style="flex:1;display:flex;flex-direction:column">
+          <textarea class="ta ta-out" id="outTxt" placeholder="Hasil terjemahan muncul di sini..." readonly></textarea>
+          <div id="romajiWrap" style="display:none;padding:8px 14px 10px;border-top:1px solid var(--border);background:var(--surface2);">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--text3);margin-bottom:4px;">Romaji / Transliterasi</div>
+            <div id="romajiTxt" style="font-size:13px;color:var(--accent);font-style:italic;line-height:1.6;"></div>
+          </div>
+          <div class="skeleton hidden" id="skelWrap">
+            <div class="sk-line" style="width:88%"></div>
+            <div class="sk-line" style="width:68%"></div>
+            <div class="sk-line" style="width:82%"></div>
+            <div class="sk-line" style="width:58%"></div>
+            <div class="sk-line" style="width:74%"></div>
+          </div>
+        </div>
+        <div class="panel-foot">
+          <span class="char" id="outCnt">0 karakter</span>
+          <button class="btn-sm" id="copyBtn">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Salin
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn-tr" id="trBtn">
+        <svg class="tr-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <div class="spin"></div>
+        Terjemahkan
+      </button>
+      <label class="auto-wrap">
+        <div class="toggle" id="autoTgl"></div>
+        <span>Auto</span>
+      </label>
+      <span class="hint">Ctrl+Enter</span>
+      <div class="ml-auto">
+        <button class="btn-sm" id="histBtn">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Riwayat
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OCR CARD -->
+  <div class="card">
+    <div class="sec-head" id="ocrHead">
+      <div class="sec-icon" style="background:linear-gradient(135deg,#6050e8,#4030c8)">📷</div>
+      <div>
+        <div class="sec-title">OCR & Kamera</div>
+        <div class="sec-sub">Upload gambar → ekstrak teks → terjemahkan</div>
+      </div>
+      <svg class="chevron" id="ocrChev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="sec-body" id="ocrBody">
+      <div class="upload-area" id="dropZone">
+        <input type="file" id="imgInput" accept="image/jpeg,image/png,image/webp"/>
+        <div class="upload-icon">🖼️</div>
+        <h3>Drag & Drop atau Klik Upload</h3>
+        <p>JPG · PNG · WEBP · Maks 10MB</p>
+      </div>
+      <div class="ocr-actions">
+        <button class="btn-cam" id="camBtn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Ambil Foto
+        </button>
+        <div class="ocr-lang-wrap">
+          <label>Bahasa di gambar:</label>
+          <select class="ocr-sel" id="ocrLang">
+            <option value="jpn">🇯🇵 Jepang</option>
+            <option value="eng" selected>🇺🇸 Inggris</option>
+            <option value="ind">🇮🇩 Indonesia</option>
+            <option value="kor">🇰🇷 Korea</option>
+            <option value="chi_sim">🇨🇳 Mandarin</option>
+          </select>
+        </div>
+      </div>
+      <div class="preview" id="ocrPrev">
+        <img id="ocrImg" src="" alt="Preview"/>
+        <div class="preview-actions">
+          <button class="btn-extract" id="extractBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Ekstrak Teks
+          </button>
+          <button class="btn-sm" id="removeImg">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Hapus
+          </button>
+        </div>
+      </div>
+      <div class="ocr-prog" id="ocrProg">
+        <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+        <div class="prog-label" id="progLbl">Memuat OCR...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY CARD -->
+  <div class="card hidden" id="histCard">
+    <div class="sec-head" style="cursor:default">
+      <div class="sec-icon" style="background:linear-gradient(135deg,#e09040,#c07020)">🕐</div>
+      <div>
+        <div class="sec-title">Riwayat Terjemahan</div>
+        <div class="sec-sub">Klik item untuk memuat ulang</div>
+      </div>
+      <button class="btn-sm" id="clrHistBtn" style="margin-left:auto">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Hapus Semua
+      </button>
+    </div>
+    <div class="hist-list" id="histList">
+      <div class="hist-empty" id="histEmpty">
+        <div class="hist-empty-icon">📋</div>
+        <div>Belum ada riwayat</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">LinguaAI · Powered by Google Gemini &amp; OpenRouter · OCR by Tesseract.js</footer>
+
+<!-- CAMERA MODAL -->
+<div class="overlay" id="camModal">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">📷 Ambil Foto</span>
+      <button class="btn-icon" id="closeCam"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <video class="cam-video" id="camVid" autoplay playsinline muted></video>
+      <canvas id="camCanvas" class="hidden"></canvas>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" id="camCancel">Batal</button>
+      <button class="btn-cap" id="capBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M20 7h-3.5L14 4H10L7.5 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg>
+        Foto
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIG MODAL -->
+<div class="overlay" id="cfgModal">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">⚙️ Konfigurasi API</span>
+      <button class="btn-icon" id="closeCfg"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="fg">
+        <label class="fl">Provider</label>
+        <select class="fi" id="providerSel" style="cursor:pointer;appearance:none">
+          <option value="google">🔵 Google AI Studio (Gratis)</option>
+          <option value="openrouter">🟠 OpenRouter</option>
+        </select>
+        <div class="fn" id="providerNote">API key dari <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a> → Get API Key. Format: <code>AIzaSy...</code></div>
+      </div>
+      <div class="fg">
+        <label class="fl">API Key</label>
+        <input class="fi" type="password" id="keyInp" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Paste API key di sini..."/>
+      </div>
+      <div class="fg">
+        <label class="fl">Model</label>
+        <input class="fi" type="text" id="modelInp" autocomplete="off" autocorrect="off" spellcheck="false"/>
+        <div class="fn" id="modelNote"></div>
+      </div>
+      <div class="sec-note">⚠️ API key tersimpan di browser lokal Anda. Jangan share file HTML ini jika sudah diisi API key.</div>
+      <button class="btn-reset" id="resetBtn">🗑️ Reset — Hapus API Key & Riwayat</button>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" id="cfgCancel">Batal</button>
+      <button class="btn-save" id="saveBtn">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+// ============================================================
+//  LinguaAI — Clean v2.0
+// ============================================================
+
+const LANG_NAMES = {auto:'detected language',id:'Indonesian',en:'English',ja:'Japanese',ko:'Korean',zh:'Mandarin Chinese'};
+const PROVIDERS = {
+  google: {
+    defaultModel: 'gemini-2.0-flash',
+    modelNote: 'Contoh: gemini-2.0-flash, gemini-1.5-flash, gemini-1.5-pro',
+    keyNote: 'API key dari <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a> → Get API Key. Format: <code>AIzaSy...</code>'
+  },
+  openrouter: {
+    defaultModel: 'openai/gpt-4o-mini',
+    modelNote: 'Contoh: openai/gpt-4o-mini, mistralai/mistral-7b-instruct:free',
+    keyNote: 'API key dari <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a>. Format: <code>sk-or-v1-...</code>'
+  }
+};
+
+const $ = id => document.getElementById(id);
+let cfg = {provider:'google', key:'', model:'gemini-2.0-flash'};
+let hist = [], autoOn = false, busy = false, camStream = null, imgFile = null;
+const MAX_HIST = 30;
+
+// ---- INIT ----
+function init() {
+  loadCfg(); loadHist(); loadLast();
+  updateBanner();
+  renderHist(); bindEvents();
+  applyTheme(localStorage.getItem('lingua_theme') || 'dark');
+}
+
+// ---- CONFIG ----
+function loadCfg() {
+  try {
+    const s = localStorage.getItem('lingua_cfg');
+    if (s) cfg = {...cfg, ...JSON.parse(s)};
+  } catch(e){}
+}
+
+function saveCfg() {
+  localStorage.setItem('lingua_cfg', JSON.stringify(cfg));
+}
+
+function updateBanner() {
+  $('banner').style.display = cfg.key && cfg.key.length > 8 ? 'none' : 'flex';
+}
+
+// ---- THEME ----
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('lingua_theme', t);
+  $('moonIco').classList.toggle('hidden', t==='dark');
+  $('sunIco').classList.toggle('hidden', t==='light');
+}
+
+// ---- STATUS ----
+
+
+// ---- TRANSLATE ----
+async function translate() {
+  const text = $('srcTxt').value.trim();
+  if (!text) { toast('Masukkan teks dulu.','info'); return; }
+  if (!cfg.key || cfg.key.length < 8) { toast('Set API key dulu.','error'); openCfg(); return; }
+  if (busy) return;
+
+  const src = $('srcLang').value;
+  const tgt = $('tgtLang').value;
+  if (src !== 'auto' && src === tgt) { toast('Bahasa sumber dan tujuan sama.','info'); return; }
+
+  busy = true; setLoading(true);
+
+  const srcL = LANG_NAMES[src] || src;
+  const tgtL = LANG_NAMES[tgt] || tgt;
+  const prompt = `You are a professional translator. Rules:
+1. Translate the text LITERALLY and ACCURATELY word by word
+2. Preserve the original meaning exactly - do not change, add, or remove meaning
+3. Use natural ${tgtL} expressions but stay true to the source
+4. Output ONLY the translated text, no explanations, no alternatives
+5. If translating to Japanese, use casual/natural spoken Japanese (口語)
+6. If translating to Korean, use natural conversational Korean
+
+Translate from ${srcL} to ${tgtL}:
+
+${text}`;
+
+  try {
+    let result = '';
+
+    if (cfg.provider === 'google') {
+      // Google AI Studio — native Gemini API
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${cfg.model}:generateContent?key=${cfg.key}`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          contents:[{parts:[{text: prompt}]}],
+          generationConfig:{maxOutputTokens:2000, temperature:0.3}
+        })
+      });
+      if (!res.ok) {
+        const e = await res.json().catch(()=>({}));
+        throw new Error(`[${res.status}] ${e?.error?.message || 'Google API error'}`);
+      }
+      const d = await res.json();
+      result = d?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+
+    } else {
+      // OpenRouter
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type':'application/json',
+          'Authorization':`Bearer ${cfg.key}`,
+          'HTTP-Referer': location.href,
+          'X-Title':'LinguaAI'
+        },
+        body: JSON.stringify({
+          model: cfg.model,
+          max_tokens: 2000,
+          messages:[{role:'user', content: prompt}]
+        })
+      });
+      if (!res.ok) {
+        const e = await res.json().catch(()=>({}));
+        throw new Error(`[${res.status}] ${e?.error?.message || 'OpenRouter error'}`);
+      }
+      const d = await res.json();
+      result = d?.choices?.[0]?.message?.content?.trim() || '';
+    }
+
+    if (!result) throw new Error('Respons kosong dari AI.');
+    $('outTxt').value = result;
+    $('outTxt').style.display = 'block';
+    resize($('outTxt'));
+    $('outCnt').textContent = result.length + ' karakter';
+    addHist(text, result, src, tgt);
+    saveLast(text, result);
+    toast('Terjemahan selesai! ✓','success');
+    // Show romaji if target is Japanese or Korean
+    if (tgt === 'ja' || tgt === 'ko') {
+      showRomaji(result, tgt);
+    } else {
+      $('romajiWrap').style.display = 'none';
+    }
+
+  } catch(err) {
+    console.error(err);
+    let m = err.message || 'Kesalahan tidak diketahui';
+    toast(m, 'error');
+    $('outTxt').value = '⚠️ Error:\n' + m;
+    $('outTxt').style.display = 'block';
+  } finally {
+    busy = false; setLoading(false);
+  }
+}
+
+function setLoading(on) {
+  $('trBtn').disabled = on;
+  $('trBtn').classList.toggle('loading', on);
+  $('outTxt').style.display = on ? 'none' : 'block';
+  $('skelWrap').classList.toggle('hidden', !on);
+}
+
+function resize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.max(200, el.scrollHeight) + 'px';
+}
+
+// ---- HISTORY ----
+function addHist(src, tgt, sl, tl) {
+  hist.unshift({id:Date.now(), source:src.slice(0,200), target:tgt.slice(0,200), srcLang:sl, tgtLang:tl, time:new Date().toISOString()});
+  if (hist.length > MAX_HIST) hist = hist.slice(0, MAX_HIST);
+  localStorage.setItem('lingua_hist', JSON.stringify(hist));
+  renderHist();
+}
+
+function loadHist() {
+  try { hist = JSON.parse(localStorage.getItem('lingua_hist') || '[]'); } catch(e){hist=[];}
+}
+
+function renderHist() {
+  const list = $('histList'), empty = $('histEmpty');
+  const items = hist.filter(h=>h&&h.source);
+  if (!items.length) { empty.style.display='block'; return; }
+  empty.style.display = 'none';
+  list.innerHTML = '';
+  list.appendChild(empty);
+  items.forEach(h => {
+    const el = document.createElement('div');
+    el.className = 'hist-item';
+    const sl = (LANG_NAMES[h.srcLang]||h.srcLang||'?').split(' ')[0];
+    const tl = (LANG_NAMES[h.tgtLang]||h.tgtLang||'?').split(' ')[0];
+    el.innerHTML = `<span class="hist-lang">${sl}→${tl}</span><div class="hist-texts"><div class="hist-src">${esc(h.source)}</div><div class="hist-tgt">${esc(h.target)}</div></div><span class="hist-time">${fmtTime(h.time)}</span>`;
+    el.onclick = () => {
+      $('srcTxt').value = h.source;
+      $('outTxt').value = h.target;
+      if (h.srcLang) $('srcLang').value = h.srcLang;
+      if (h.tgtLang) $('tgtLang').value = h.tgtLang;
+      updateChar(); resize($('srcTxt')); resize($('outTxt'));
+      $('outCnt').textContent = h.target.length + ' karakter';
+      toast('Riwayat dimuat','info');
+      window.scrollTo({top:0,behavior:'smooth'});
+    };
+    list.appendChild(el);
+  });
+}
+
+function saveLast(s, t) {
+  try { localStorage.setItem('lingua_last', JSON.stringify({source:s,target:t,srcLang:$('srcLang').value,tgtLang:$('tgtLang').value})); } catch(e){}
+}
+
+function loadLast() {
+  try {
+    const d = JSON.parse(localStorage.getItem('lingua_last')||'{}');
+    if (d.source) { $('srcTxt').value=d.source; $('outTxt').value=d.target||''; if(d.srcLang)$('srcLang').value=d.srcLang; if(d.tgtLang)$('tgtLang').value=d.tgtLang; updateChar(); resize($('srcTxt')); if(d.target){resize($('outTxt'));$('outCnt').textContent=d.target.length+' karakter';}}
+  } catch(e){}
+}
+
+// ---- OCR ----
+function loadImg(file) {
+  if (!file) return;
+  if (!['image/jpeg','image/png','image/webp'].includes(file.type)) { toast('Format tidak didukung (JPG/PNG/WEBP)','error'); return; }
+  if (file.size > 10*1024*1024) { toast('File terlalu besar (maks 10MB)','error'); return; }
+  imgFile = file;
+  const r = new FileReader();
+  r.onload = e => { $('ocrImg').src=e.target.result; $('ocrPrev').classList.add('show'); };
+  r.readAsDataURL(file);
+  toast('Gambar dimuat. Klik Ekstrak Teks.','info');
+}
+
+async function runOCR() {
+  if (!imgFile) { toast('Tidak ada gambar','error'); return; }
+  const lang = $('ocrLang').value;
+  $('extractBtn').disabled = true;
+  const prog = $('ocrProg'), fill = $('progFill'), lbl = $('progLbl');
+  prog.classList.add('show'); fill.style.width='0%'; lbl.textContent='Memuat Tesseract...';
+  try {
+    const worker = await Tesseract.createWorker(lang, 1, {
+      logger: m => {
+        if (m.status==='recognizing text') { fill.style.width=Math.round(m.progress*100)+'%'; lbl.textContent=`Mengenali... ${Math.round(m.progress*100)}%`; }
+        else if (m.status.includes('loading')) { fill.style.width='30%'; lbl.textContent='Memuat data bahasa...'; }
+        else if (m.status.includes('initializ')) { fill.style.width='55%'; lbl.textContent='Menginisialisasi...'; }
+      }
+    });
+    const {data:{text}} = await worker.recognize(imgFile);
+    await worker.terminate();
+    fill.style.width='100%'; lbl.textContent='Selesai!';
+    const cleaned = text.trim();
+    if (!cleaned) { toast('Tidak ada teks terdeteksi','error'); return; }
+    $('srcTxt').value = cleaned; updateChar(); resize($('srcTxt'));
+    toast(`OCR selesai! ${cleaned.length} karakter diekstrak`,'success');
+    setTimeout(()=>prog.classList.remove('show'), 1500);
+  } catch(err) {
+    toast('OCR gagal: '+(err.message||'unknown'),'error');
+    prog.classList.remove('show');
+  } finally { $('extractBtn').disabled=false; }
+}
+
+// ---- CAMERA ----
+async function openCam() {
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}});
+    $('camVid').srcObject = camStream;
+    $('camModal').classList.add('open');
+  } catch(e) {
+    toast(e.name==='NotAllowedError'?'Akses kamera ditolak':'Kamera tidak tersedia','error');
+  }
+}
+
+function closeCam() {
+  if (camStream) { camStream.getTracks().forEach(t=>t.stop()); camStream=null; }
+  $('camVid').srcObject=null; $('camModal').classList.remove('open');
+}
+
+function capturePhoto() {
+  const v=$('camVid'), c=$('camCanvas');
+  c.width=v.videoWidth; c.height=v.videoHeight;
+  c.getContext('2d').drawImage(v,0,0);
+  c.toBlob(blob=>{ loadImg(new File([blob],'capture.jpg',{type:'image/jpeg'})); closeCam(); },'image/jpeg',0.92);
+}
+
+// ---- CONFIG MODAL ----
+function openCfg() {
+  $('providerSel').value = cfg.provider || 'google';
+  $('keyInp').value = cfg.key || '';
+  $('modelInp').value = cfg.model || PROVIDERS[cfg.provider||'google'].defaultModel;
+  updateProviderUI();
+  $('cfgModal').classList.add('open');
+}
+
+function closeCfg() { $('cfgModal').classList.remove('open'); }
+
+function updateProviderUI() {
+  const p = $('providerSel').value;
+  $('providerNote').innerHTML = PROVIDERS[p].keyNote;
+  $('modelNote').textContent = PROVIDERS[p].modelNote;
+  if (!$('modelInp').value || Object.values(PROVIDERS).some(x=>x.defaultModel===$('modelInp').value)) {
+    $('modelInp').value = PROVIDERS[p].defaultModel;
+  }
+}
+
+// ---- TOAST ----
+function toast(msg, type='default') {
+  const c=$('toasts'), el=document.createElement('div');
+  el.className=`toast ${type}`;
+  const icons={success:'✓',error:'✕',info:'ℹ',default:'●'};
+  el.innerHTML=`<span>${icons[type]||'●'}</span><span>${esc(msg)}</span>`;
+  c.appendChild(el);
+  setTimeout(()=>{ el.style.animation='tout 0.25s ease forwards'; setTimeout(()=>el.remove(),250); },3000);
+}
+
+// ---- UTILS ----
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function updateChar(){const l=$('srcTxt').value.length;$('charCnt').textContent=l+' / 5000';$('charCnt').className='char'+(l>4000?' warn':'')+(l>=5000?' max':'')}
+function fmtTime(iso){try{const d=new Date(iso),now=new Date(),diff=now-d;if(diff<60000)return'Baru saja';if(diff<3600000)return Math.floor(diff/60000)+' mnt lalu';if(diff<86400000)return Math.floor(diff/3600000)+' jam lalu';return d.toLocaleDateString('id-ID',{day:'numeric',month:'short'})}catch(e){return''}}
+
+// ---- ROMAJI ----
+async function showRomaji(text, lang) {
+  const wrap = $('romajiWrap');
+  const out = $('romajiTxt');
+  wrap.style.display = 'block';
+  out.textContent = 'Memuat transliterasi...';
+  try {
+    const langName = lang === 'ja' ? 'Japanese' : 'Korean';
+    const prompt = `Convert the following ${langName} text to romanized Latin script (romaji for Japanese, romanization for Korean). Output ONLY the romanized text, nothing else.
+
+${text}`;
+    let romaji = '';
+    if (cfg.provider === 'google') {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${cfg.model}:generateContent?key=${cfg.key}`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:500,temperature:0.1}})
+      });
+      const d = await res.json();
+      romaji = d?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+    } else {
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','Authorization':`Bearer ${cfg.key}`,'HTTP-Referer':location.href,'X-Title':'LinguaAI'},
+        body: JSON.stringify({model:cfg.model,max_tokens:500,messages:[{role:'user',content:prompt}]})
+      });
+      const d = await res.json();
+      romaji = d?.choices?.[0]?.message?.content?.trim() || '';
+    }
+    out.textContent = romaji || 'Tidak dapat membuat transliterasi.';
+  } catch(e) {
+    out.textContent = 'Gagal memuat transliterasi.';
+  }
+}
+
+// ---- EVENTS ----
+function bindEvents() {
+  $('themeBtn').onclick = () => applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
+  $('trBtn').onclick = translate;
+  $('srcTxt').addEventListener('keydown', e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();translate();} });
+  $('srcTxt').addEventListener('input', ()=>{ updateChar(); resize($('srcTxt')); if(autoOn){clearTimeout(window._at);window._at=setTimeout(()=>{if($('srcTxt').value.trim().length>2)translate();},1500);} });
+  $('clearBtn').onclick = ()=>{ $('srcTxt').value=''; $('outTxt').value=''; updateChar(); resize($('srcTxt')); $('outCnt').textContent='0 karakter'; $('romajiWrap').style.display='none'; };
+  $('copyBtn').onclick = async ()=>{ const t=$('outTxt').value.trim(); if(!t){toast('Tidak ada teks','info');return;} try{await navigator.clipboard.writeText(t);}catch(e){const el=document.createElement('textarea');el.value=t;document.body.appendChild(el);el.select();document.execCommand('copy');document.body.removeChild(el);} toast('Disalin!','success'); };
+  $('swapBtn').onclick = ()=>{ const sv=$('srcLang').value; if(sv==='auto'){toast('Tidak bisa swap saat Deteksi Otomatis','info');return;} const tv=$('tgtLang').value; $('srcLang').value=tv; $('tgtLang').value=sv; const st=$('srcTxt').value; $('srcTxt').value=$('outTxt').value; $('outTxt').value=st; updateChar(); resize($('srcTxt')); resize($('outTxt')); $('outCnt').textContent=$('outTxt').value.length+' karakter'; };
+  $('autoTgl').onclick = ()=>{ autoOn=!autoOn; $('autoTgl').classList.toggle('on',autoOn); toast(autoOn?'Auto-translate aktif':'Auto-translate nonaktif','info'); };
+  $('histBtn').onclick = ()=>{ $('histCard').classList.toggle('hidden'); renderHist(); };
+  $('clrHistBtn').onclick = ()=>{ hist=[]; localStorage.removeItem('lingua_hist'); renderHist(); toast('Riwayat dihapus','info'); };
+
+  // Config
+  $('cfgBtn').onclick = openCfg;
+  $('bannerBtn').onclick = openCfg;
+  $('closeCfg').onclick = closeCfg;
+  $('cfgCancel').onclick = closeCfg;
+  $('cfgModal').onclick = e=>{ if(e.target===$('cfgModal'))closeCfg(); };
+  $('providerSel').onchange = updateProviderUI;
+  $('saveBtn').onclick = ()=>{
+    const k=$('keyInp').value.trim();
+    if(!k){toast('API key tidak boleh kosong','error');return;}
+    cfg.provider = $('providerSel').value;
+    cfg.key = k;
+    cfg.model = $('modelInp').value.trim() || PROVIDERS[cfg.provider].defaultModel;
+    saveCfg(); updateBanner(); closeCfg();
+    toast('Konfigurasi tersimpan! ✓','success');
+  };
+  $('resetBtn').onclick = ()=>{ if(confirm('Hapus API key dan riwayat?')){localStorage.removeItem('lingua_cfg');localStorage.removeItem('lingua_hist');cfg={provider:'google',key:'',model:'gemini-2.0-flash'};hist=[];renderHist();updateBanner();closeCfg();toast('Reset selesai','info');} };
+
+  // OCR
+  $('ocrHead').onclick = ()=>{ $('ocrBody').classList.toggle('open'); $('ocrChev').classList.toggle('open'); };
+  $('imgInput').onchange = e=>{ if(e.target.files[0])loadImg(e.target.files[0]); };
+  const dz=$('dropZone');
+  dz.ondragover=e=>{e.preventDefault();dz.classList.add('drag')};
+  dz.ondragleave=()=>dz.classList.remove('drag');
+  dz.ondrop=e=>{e.preventDefault();dz.classList.remove('drag');if(e.dataTransfer.files[0])loadImg(e.dataTransfer.files[0]);};
+  $('extractBtn').onclick = runOCR;
+  $('removeImg').onclick = ()=>{ imgFile=null; $('ocrPrev').classList.remove('show'); $('ocrImg').src=''; $('imgInput').value=''; };
+  $('camBtn').onclick = openCam;
+  $('capBtn').onclick = capturePhoto;
+  $('closeCam').onclick = closeCam;
+  $('camCancel').onclick = closeCam;
+  $('camModal').onclick = e=>{ if(e.target===$('camModal'))closeCam(); };
+
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'){closeCfg();closeCam();} });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
