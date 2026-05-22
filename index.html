@@ -1137,8 +1137,7 @@
         </div>
         <div class="form-group">
           <label class="form-label" for="apiUrlInput">API URL</label>
-          <input class="form-input" type="text" id="apiUrlInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-          <div class="form-note">Default: <code>https://openrouter.ai/api/v1/chat/completions</code></div>
+          <input class="form-input" type="text" id="apiUrlInput" placeholder="https://openrouter.ai/api/v1/chat/completions" />
         </div>
         <div class="form-group">
           <label class="form-label" for="modelInput">Model AI</label>
@@ -1150,11 +1149,6 @@
         <div class="security-note">
           ⚠️ <strong>Perhatian Keamanan:</strong> Menyimpan API key di frontend tidak aman untuk produksi. 
           Gunakan Cloudflare Worker / backend proxy untuk menyembunyikan API key dari publik.
-        </div>
-        <div style="margin-top:12px;">
-          <button id="resetStorageBtn" style="width:100%;padding:9px;border-radius:9px;border:1px solid var(--red);background:var(--red-soft);color:var(--red);font-family:var(--font-body);font-size:13px;font-weight:600;cursor:pointer;">
-            🗑️ Reset &amp; Hapus Semua Data Tersimpan
-          </button>
         </div>
       </div>
       <div class="modal-footer">
@@ -1178,7 +1172,7 @@
   const DEFAULT_CONFIG = {
     API_URL: "https://openrouter.ai/api/v1/chat/completions",
     API_KEY: "",  // Paste API key di sini atau gunakan UI Settings
-    MODEL: "google/gemini-2.0-flash-exp:free"
+    MODEL: "openai/gpt-4o-mini"
   };
 
   const LANG_NAMES = {
@@ -1237,25 +1231,16 @@
         currentConfig = { ...DEFAULT_CONFIG, ...parsed };
       }
     } catch(e) {}
-    // Auto-fix jika URL salah (tanpa s)
-    if (!currentConfig.API_URL) currentConfig.API_URL = DEFAULT_CONFIG.API_URL;
-    if (currentConfig.API_URL.endsWith('/completion')) {
-      currentConfig.API_URL = currentConfig.API_URL + 's';
-    }
     $('apiKeyInput').value = currentConfig.API_KEY || '';
-    $('apiUrlInput').value = currentConfig.API_URL;
+    $('apiUrlInput').value = currentConfig.API_URL || DEFAULT_CONFIG.API_URL;
     $('modelInput').value = currentConfig.MODEL || DEFAULT_CONFIG.MODEL;
   }
 
   function saveConfig() {
     currentConfig.API_KEY = $('apiKeyInput').value.trim();
-    let url = $('apiUrlInput').value.trim() || DEFAULT_CONFIG.API_URL;
-    // Auto-fix jika ketik 'completion' tanpa s
-    if (url.endsWith('/completion')) url = url + 's';
-    currentConfig.API_URL = url;
+    currentConfig.API_URL = $('apiUrlInput').value.trim() || DEFAULT_CONFIG.API_URL;
     currentConfig.MODEL = $('modelInput').value.trim() || DEFAULT_CONFIG.MODEL;
     localStorage.setItem('linguaai_config', JSON.stringify(currentConfig));
-    $('apiUrlInput').value = currentConfig.API_URL;
     updateConfigBannerVisibility();
   }
 
@@ -1286,7 +1271,7 @@
   async function translate() {
     const text = sourceText.value.trim();
     if (!text) { showToast('Masukkan teks terlebih dahulu.', 'info'); return; }
-    if (!currentConfig.API_KEY || currentConfig.API_KEY === 'PASTE_API_KEY_HERE' || currentConfig.API_KEY.length < 10) {
+    if (!currentConfig.API_KEY || currentConfig.API_KEY === 'PASTE_API_KEY_HERE') {
       showToast('Harap set API Key terlebih dahulu.', 'error');
       openConfigModal();
       return;
@@ -1304,103 +1289,58 @@
     isTranslating = true;
     setLoadingState(true);
 
-    // Debug info
-    const debugUrl = currentConfig.API_URL;
-    const debugModel = currentConfig.MODEL;
-    const debugKeyPreview = currentConfig.API_KEY.substring(0, 12) + '...';
-    console.log('Translate config:', { url: debugUrl, model: debugModel, key: debugKeyPreview });
-
     const systemPrompt = `You are a professional translator. Translate naturally and contextually. Preserve meaning and tone. Do not explain anything. Output ONLY the translated text, nothing else.`;
 
     const srcLabel = src === 'auto' ? 'the detected language' : LANG_NAMES[src] || src;
     const tgtLabel = LANG_NAMES[tgt] || tgt;
     const userMsg = `Translate the following text from ${srcLabel} to ${tgtLabel}:\n\n${text}`;
 
-    // Deteksi apakah pakai Google AI Studio atau OpenRouter
-    const isGoogleAPI = debugUrl.includes('googleapis.com');
-
     try {
-      let response;
+      const response = await fetch(currentConfig.API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentConfig.API_KEY}`,
+          'HTTP-Referer': window.location.href,
+          'X-Title': 'LinguaAI Translator'
+        },
+        body: JSON.stringify({
+          model: currentConfig.MODEL,
+          max_tokens: 2000,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userMsg }
+          ]
+        })
+      });
 
-      if (isGoogleAPI) {
-        // Google AI Studio — pakai native Gemini API format
-        const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/${debugModel}:generateContent?key=${currentConfig.API_KEY}`;
-        response = await fetch(googleUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: systemPrompt + '\n\n' + userMsg }] }],
-            generationConfig: { maxOutputTokens: 2000, temperature: 0.3 }
-          })
-        });
-
-        console.log('Google API response status:', response.status);
-
-        if (!response.ok) {
-          const errData = await response.json().catch(() => ({}));
-          const errMsg = errData?.error?.message || `HTTP ${response.status}`;
-          throw new Error(`[${response.status}] ${errMsg}`);
-        }
-
-        const data = await response.json();
-        const result = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-        if (!result) throw new Error('Respons kosong dari Google API.');
-
-        outputText.value = result;
-        outputText.style.display = 'block';
-        autoResizeTextarea(outputText);
-        outputCharCount.textContent = `${result.length} karakter`;
-        addToHistory(text, result, src, tgt);
-        saveLastTranslation(text, result);
-        showToast('Terjemahan selesai!', 'success');
-
-      } else {
-        // OpenRouter / OpenAI compatible
-        response = await fetch(debugUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${currentConfig.API_KEY}`,
-            'HTTP-Referer': window.location.href,
-            'X-Title': 'LinguaAI Translator'
-          },
-          body: JSON.stringify({
-            model: debugModel,
-            max_tokens: 2000,
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: userMsg }
-            ]
-          })
-        });
-
-        console.log('OpenRouter response status:', response.status);
-
-        if (!response.ok) {
-          const errData = await response.json().catch(() => ({}));
-          const errMsg = errData?.error?.message || `HTTP ${response.status}`;
-          throw new Error(`[${response.status}] ${errMsg}`);
-        }
-
-        const data = await response.json();
-        const result = data?.choices?.[0]?.message?.content?.trim();
-        if (!result) throw new Error('Respons kosong dari API.');
-
-        outputText.value = result;
-        outputText.style.display = 'block';
-        autoResizeTextarea(outputText);
-        outputCharCount.textContent = `${result.length} karakter`;
-        addToHistory(text, result, src, tgt);
-        saveLastTranslation(text, result);
-        showToast('Terjemahan selesai!', 'success');
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        const errMsg = errData?.error?.message || `HTTP ${response.status}`;
+        throw new Error(errMsg);
       }
+
+      const data = await response.json();
+      const result = data?.choices?.[0]?.message?.content?.trim();
+
+      if (!result) throw new Error('Respons kosong dari API.');
+
+      outputText.value = result;
+      outputText.style.display = 'block';
+      autoResizeTextarea(outputText);
+      outputCharCount.textContent = `${result.length} karakter`;
+
+      addToHistory(text, result, src, tgt);
+      saveLastTranslation(text, result);
+      showToast('Terjemahan selesai!', 'success');
 
     } catch(err) {
       console.error('Translation error:', err);
-      let msg = err.message || 'Terjadi kesalahan tidak diketahui.';
-      showToast('Error: ' + msg, 'error');
-      outputText.value = 'ERROR:\n' + msg + '\n\nURL: ' + debugUrl + '\nModel: ' + debugModel;
-      outputText.style.display = 'block';
+      let msg = err.message || 'Terjadi kesalahan.';
+      if (msg.includes('401') || msg.includes('Unauthorized')) msg = 'API Key tidak valid.';
+      else if (msg.includes('429')) msg = 'Rate limit tercapai. Coba lagi sebentar.';
+      else if (msg.includes('fetch') || msg.includes('network')) msg = 'Gagal terhubung. Cek koneksi internet.';
+      showToast(msg, 'error');
     } finally {
       isTranslating = false;
       setLoadingState(false);
@@ -1915,24 +1855,6 @@
         closeCameraModal();
       }
     });
-
-    // Reset storage button
-    $('resetStorageBtn').addEventListener('click', () => {
-      if (confirm('Yakin ingin reset? API key dan riwayat terjemahan akan terhapus. Teks di layar tidak berubah.')) {
-        localStorage.removeItem('linguaai_config');
-        localStorage.removeItem('linguaai_history');
-        localStorage.removeItem('linguaai_last');
-        currentConfig = { ...DEFAULT_CONFIG };
-        history = [];
-        $('apiKeyInput').value = '';
-        $('apiUrlInput').value = DEFAULT_CONFIG.API_URL;
-        $('modelInput').value = DEFAULT_CONFIG.MODEL;
-        renderHistory();
-        updateConfigBannerVisibility();
-        closeConfigModal();
-        showToast('Config direset. Silakan masukkan API key baru.', 'info');
-      }
-    });
   }
 
   // ---- Bootstrap ----
@@ -1941,3 +1863,4 @@
 
 </body>
 </html>
+
