@@ -4,212 +4,21 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
 <title>LinguaAI</title>
+<meta name="description" content="AI Translator — Google Gemini & OpenRouter. Terjemahan natural, OCR gambar, kamera."/>
+
+<!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+<!-- CSS -->
+<link rel="stylesheet" href="style.css"/>
+
+<!-- Tesseract OCR -->
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#f2f2f7;--surface:#ffffff;--surface2:#f9f9f9;
-  --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.12);
-  --text:#000000;--text2:#3c3c43;--text3:#8e8e93;
-  --blue:#007aff;--blue-bg:rgba(0,122,255,0.08);
-  --green:#34c759;--red:#ff3b30;--orange:#ff9500;
-  --shadow:0 2px 12px rgba(0,0,0,0.08);
-  --shadow-lg:0 8px 32px rgba(0,0,0,0.12);
-  --radius:16px;--radius-sm:12px;--radius-xs:10px;
-}
-[data-theme="dark"]{
-  --bg:#000000;--surface:#1c1c1e;--surface2:#2c2c2e;
-  --border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.15);
-  --text:#ffffff;--text2:#ebebf5;--text3:#636366;
-  --blue:#0a84ff;--blue-bg:rgba(10,132,255,0.12);
-  --shadow:0 2px 12px rgba(0,0,0,0.4);--shadow-lg:0 8px 32px rgba(0,0,0,0.5);
-}
-html{-webkit-text-size-adjust:100%}
-body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;-webkit-tap-highlight-color:transparent}
-
-/* HEADER */
-.header{background:var(--surface);padding:12px 16px 10px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
-.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.logo{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.3px}
-.logo-ico{width:28px;height:28px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px}
-.hdr-btns{display:flex;gap:6px}
-.hdr-btn{width:36px;height:36px;border-radius:50%;border:none;background:var(--surface2);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:opacity 0.15s;-webkit-tap-highlight-color:transparent}
-.hdr-btn:active{opacity:0.6}
-
-/* SEGMENTED TABS */
-.seg-tabs{display:flex;background:var(--surface2);border-radius:10px;padding:2px;gap:2px}
-.seg-tab{flex:1;padding:7px 12px;border-radius:8px;border:none;background:transparent;cursor:pointer;font-size:13px;font-weight:500;color:var(--text3);transition:all 0.2s;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px;-webkit-tap-highlight-color:transparent}
-.seg-tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.12)}
-
-/* MAIN */
-.main{padding:16px;max-width:800px;margin:0 auto;padding-bottom:40px}
-
-/* BANNER */
-.banner{background:var(--blue-bg);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px}
-.banner-txt{font-size:13px;color:var(--blue);flex:1}
-.banner-txt a{color:var(--blue);font-weight:600;text-decoration:none}
-.banner-btn{padding:7px 14px;border-radius:20px;background:var(--blue);color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;-webkit-tap-highlight-color:transparent}
-
-/* CARD */
-.card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:14px}
-
-/* LANG PICKER */
-.lang-picker{display:flex;align-items:center;padding:10px 12px;gap:8px;border-bottom:1px solid var(--border)}
-.lang-sel{flex:1;position:relative}
-.lang-sel select{width:100%;padding:9px 30px 9px 12px;border:1.5px solid var(--border2);border-radius:var(--radius-xs);background:var(--surface2);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;font-weight:500;cursor:pointer;appearance:none;-webkit-appearance:none;outline:none;transition:border-color 0.2s,box-shadow 0.2s}
-.lang-sel select:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-bg)}
-.sel-caret{position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text3)}
-.swap-btn{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--border2);background:var(--surface2);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);flex-shrink:0;transition:all 0.2s;-webkit-tap-highlight-color:transparent}
-.swap-btn:active{opacity:0.6;transform:rotate(180deg)}
-
-/* TEXT AREAS */
-.ta-wrap{position:relative}
-.ta{width:100%;min-height:140px;padding:14px;border:none;background:transparent;font-family:'Inter',sans-serif;font-size:17px;font-weight:400;line-height:1.55;color:var(--text);resize:none;outline:none;display:block}
-.ta::placeholder{color:var(--text3)}
-.ta-out{color:var(--text2);background:var(--surface2)}
-.clear-btn{position:absolute;top:10px;right:10px;width:26px;height:26px;border-radius:50%;border:none;background:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;opacity:0;transition:opacity 0.2s;-webkit-tap-highlight-color:transparent}
-.clear-btn.show{opacity:1}
-
-/* DIVIDER */
-.ta-divider{height:1px;background:var(--border);margin:0}
-
-/* ROMAJI */
-.romaji{display:none;padding:8px 14px 12px;font-size:13px;color:var(--blue);font-style:italic;line-height:1.5;background:var(--surface2)}
-
-/* SKEL */
-.skel{display:none;padding:14px;flex-direction:column;gap:10px;background:var(--surface2)}
-.skel.show{display:flex}
-.sk{height:14px;border-radius:6px;background:linear-gradient(90deg,var(--border) 25%,var(--bg) 50%,var(--border) 75%);background-size:200% 100%;animation:sh 1.3s infinite}
-@keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
-
-/* PANEL FOOT */
-.panel-foot{display:flex;align-items:center;padding:6px 8px;gap:2px;background:var(--surface2)}
-.foot-btn{padding:7px 12px;border-radius:20px;border:none;background:transparent;cursor:pointer;font-size:13px;font-weight:500;color:var(--text3);display:flex;align-items:center;gap:5px;transition:background 0.15s;font-family:'Inter',sans-serif;-webkit-tap-highlight-color:transparent}
-.foot-btn:active{background:var(--border)}
-.char-cnt{font-size:12px;color:var(--text3);padding:7px 10px;margin-left:auto}
-
-/* ACTION BAR */
-.action-bar{display:flex;align-items:center;padding:10px 14px;gap:10px;border-top:1px solid var(--border)}
-.btn-tr{flex:1;padding:13px;border-radius:var(--radius-xs);background:var(--blue);color:#fff;border:none;cursor:pointer;font-size:16px;font-weight:600;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity 0.15s;-webkit-tap-highlight-color:transparent}
-.btn-tr:active{opacity:0.8}
-.btn-tr:disabled{opacity:0.5;cursor:not-allowed}
-.spin{width:16px;height:16px;border:2px solid rgba(255,255,255,0.35);border-top-color:#fff;border-radius:50%;animation:sp 0.7s linear infinite;display:none}
-@keyframes sp{to{transform:rotate(360deg)}}
-.btn-tr.loading .spin{display:block}
-.btn-tr.loading .tr-ico{display:none}
-.auto-wrap{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:500;color:var(--text2);cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;white-space:nowrap}
-.ios-toggle{width:50px;height:28px;border-radius:14px;background:#e5e5ea;position:relative;transition:background 0.25s;flex-shrink:0;cursor:pointer}
-[data-theme="dark"] .ios-toggle{background:#3a3a3c}
-.ios-toggle::after{content:'';position:absolute;width:24px;height:24px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left 0.25s cubic-bezier(0.4,0,0.2,1);box-shadow:0 2px 6px rgba(0,0,0,0.25)}
-.ios-toggle.on{background:var(--green)}
-.ios-toggle.on::after{left:24px}
-
-/* HIST BTN */
-.hist-btn{padding:9px 14px;border-radius:var(--radius-xs);border:1.5px solid var(--border2);background:transparent;cursor:pointer;font-size:14px;font-weight:500;color:var(--text2);font-family:'Inter',sans-serif;-webkit-tap-highlight-color:transparent;white-space:nowrap}
-.hist-btn:active{background:var(--surface2)}
-
-/* HISTORY */
-.hist-card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:none}
-.hist-card.show{display:block}
-.hist-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)}
-.hist-title{font-size:15px;font-weight:600}
-.hist-clr{padding:6px 12px;border-radius:20px;border:none;background:transparent;cursor:pointer;font-size:13px;color:var(--red);font-family:'Inter',sans-serif}
-.hist-list{max-height:300px;overflow-y:auto}
-.hist-item{display:flex;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;-webkit-tap-highlight-color:transparent}
-.hist-item:last-child{border-bottom:none}
-.hist-item:active{background:var(--surface2)}
-.hist-lang{font-size:11px;font-weight:600;color:var(--blue);background:var(--blue-bg);padding:3px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;margin-top:2px}
-.hist-texts{flex:1;min-width:0}
-.hist-src{font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;margin-bottom:2px}
-.hist-tgt{font-size:12px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hist-time{font-size:11px;color:var(--text3);white-space:nowrap;flex-shrink:0;margin-top:3px}
-.hist-empty{padding:32px;text-align:center;color:var(--text3);font-size:14px}
-
-/* OCR */
-.ocr-card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
-.upload-zone{border:2px dashed var(--border2);border-radius:var(--radius-sm);padding:36px 16px;text-align:center;cursor:pointer;transition:all 0.2s;margin:16px;position:relative;background:var(--surface2);display:block;touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
-.upload-zone:active,.upload-zone.drag{border-color:var(--blue);background:var(--blue-bg)}
-.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.upload-icon{font-size:44px;margin-bottom:12px}
-.upload-zone h3{font-size:15px;font-weight:600;margin-bottom:4px}
-.upload-zone p{font-size:13px;color:var(--text3)}
-.ocr-btns{display:flex;gap:10px;align-items:center;padding:0 16px 14px;flex-wrap:wrap}
-.btn-cam{padding:10px 18px;border-radius:22px;border:1.5px solid var(--border2);background:var(--surface2);cursor:pointer;font-size:14px;font-weight:500;color:var(--text2);font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:7px;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;touch-action:manipulation}
-.btn-cam:active{background:var(--border)}
-.ocr-lang-wrap{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text3)}
-.ocr-sel-wrap{position:relative}
-.ocr-sel{padding:8px 28px 8px 12px;border:1.5px solid var(--border2);border-radius:22px;background:var(--surface2);color:var(--text);font-size:13px;font-weight:500;cursor:pointer;appearance:none;-webkit-appearance:none;outline:none;font-family:'Inter',sans-serif}
-.ocr-sel-caret{position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text3)}
-.prev-wrap{display:none;padding:0 16px 16px}
-.prev-wrap.show{display:block}
-.prev-wrap img{max-width:100%;max-height:220px;border-radius:var(--radius-sm);border:1px solid var(--border);display:block}
-.prev-actions{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
-.btn-extract{padding:11px 22px;border-radius:22px;background:var(--blue);color:#fff;border:none;cursor:pointer;font-size:14px;font-weight:600;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:7px;-webkit-tap-highlight-color:transparent}
-.btn-extract:active{opacity:0.8}
-.btn-extract:disabled{opacity:0.45;cursor:not-allowed}
-.btn-rm{padding:11px 18px;border-radius:22px;border:1.5px solid var(--border2);background:transparent;cursor:pointer;font-size:14px;font-weight:500;color:var(--text2);font-family:'Inter',sans-serif}
-.prog-wrap{display:none;padding:0 16px 16px}
-.prog-wrap.show{display:block}
-.prog-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:6px}
-.prog-fill{height:100%;background:var(--blue);border-radius:2px;transition:width 0.3s;width:0%}
-.prog-lbl{font-size:12px;color:var(--text3);text-align:center}
-
-/* MODAL */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;display:none;align-items:flex-end;justify-content:center;padding:0}
-.overlay.open{display:flex}
-@media(min-width:600px){.overlay{align-items:center;padding:16px}}
-.modal{background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:480px;overflow:hidden;animation:slide-up 0.28s cubic-bezier(0.4,0,0.2,1)}
-@media(min-width:600px){.modal{border-radius:20px;animation:fade-in 0.2s ease}}
-@keyframes slide-up{from{transform:translateY(100%)}to{transform:translateY(0)}}
-@keyframes fade-in{from{opacity:0;transform:scale(0.96)}to{opacity:1;transform:scale(1)}}
-.modal-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:10px auto 0}
-@media(min-width:600px){.modal-handle{display:none}}
-.modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border)}
-.modal-title{font-size:17px;font-weight:600}
-.modal-close{width:30px;height:30px;border-radius:50%;border:none;background:var(--surface2);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text3)}
-.modal-body{padding:20px}
-.modal-foot{padding:12px 20px 24px;display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--border)}
-.cam-video{width:100%;border-radius:var(--radius-sm);background:#000;aspect-ratio:4/3;object-fit:cover;display:block}
-.fg{margin-bottom:16px}
-.fl{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:var(--text3);margin-bottom:6px}
-.fi{width:100%;padding:12px 14px;border:1.5px solid var(--border2);border-radius:var(--radius-xs);background:var(--surface2);color:var(--text);font-size:15px;outline:none;transition:border-color 0.2s;font-family:'Inter',sans-serif}
-.fi:focus{border-color:var(--blue)}
-.fn{font-size:12px;color:var(--text3);margin-top:5px;line-height:1.5}
-.fn a{color:var(--blue);text-decoration:none;font-weight:500}
-.fn code{background:var(--surface2);border:1px solid var(--border);padding:1px 5px;border-radius:4px;font-size:11px}
-.sec-note{background:#fff3cd;border-radius:var(--radius-xs);padding:10px 12px;font-size:12px;color:#856404;margin-top:12px;line-height:1.5}
-[data-theme="dark"] .sec-note{background:#3a2e00;color:#ffd60a}
-.btn-save{padding:12px 22px;border-radius:22px;background:var(--blue);color:#fff;border:none;cursor:pointer;font-size:15px;font-weight:600;font-family:'Inter',sans-serif}
-.btn-cancel{padding:12px 18px;border-radius:22px;border:none;background:var(--surface2);cursor:pointer;font-size:15px;color:var(--text2);font-family:'Inter',sans-serif}
-.btn-cap{padding:12px 22px;border-radius:22px;background:var(--blue);color:#fff;border:none;cursor:pointer;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:7px}
-.btn-reset{width:100%;margin-top:12px;padding:11px;border-radius:22px;border:1.5px solid var(--red);background:transparent;color:var(--red);font-size:14px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif}
-
-/* TOAST - iOS style */
-.toasts{position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:90%;max-width:360px}
-.toast{padding:11px 20px;border-radius:22px;background:rgba(50,50,50,0.92);color:#fff;font-size:14px;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,0.25);pointer-events:all;animation:ti 0.3s cubic-bezier(0.4,0,0.2,1);backdrop-filter:blur(10px);text-align:center;width:auto}
-.toast.success{background:rgba(52,199,89,0.92)}
-.toast.error{background:rgba(255,59,48,0.92)}
-.toast.info{background:rgba(0,122,255,0.92)}
-@keyframes ti{from{opacity:0;transform:translateY(-12px) scale(0.9)}to{opacity:1;transform:translateY(0) scale(1)}}
-@keyframes to2{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(0.9)}}
-
-.hidden{display:none!important}
-::-webkit-scrollbar{width:4px}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-.ta-out{transition:opacity 0.2s ease}
-.ta-out.fading{opacity:0.35}
-.typing-dot{display:inline-flex;gap:3px;align-items:center;padding:14px;opacity:0;transition:opacity 0.2s}
-.typing-dot.show{opacity:1}
-.typing-dot span{width:6px;height:6px;border-radius:50%;background:var(--text3);animation:bounce 1.2s infinite}
-.typing-dot span:nth-child(2){animation-delay:0.2s}
-.typing-dot span:nth-child(3){animation-delay:0.4s}
-@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
-</style>
 </head>
 <body>
 
+<!-- ===================== HEADER ===================== -->
 <header class="header">
   <div class="header-top">
     <div class="logo">
@@ -218,36 +27,59 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
     </div>
     <div class="hdr-btns">
       <button class="hdr-btn" id="cfgBtn" title="Pengaturan">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 0 4.93 19.07M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.07 4.93A10 10 0 0 0 4.93 19.07M12 2v2M12 20v2M2 12h2M20 12h2"/>
+        </svg>
       </button>
-      <button class="hdr-btn" id="themeBtn">
-        <svg id="moonIco" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-        <svg id="sunIco" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="hidden"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <button class="hdr-btn" id="themeBtn" title="Tema">
+        <svg id="moonIco" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+        <svg id="sunIco" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="hidden">
+          <circle cx="12" cy="12" r="5"/>
+          <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
       </button>
     </div>
   </div>
   <div class="seg-tabs">
     <button class="seg-tab active" id="tabTr" onclick="switchTab('tr')">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+      </svg>
       Terjemahan
     </button>
     <button class="seg-tab" id="tabOcr" onclick="switchTab('ocr')">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-      Kamera & OCR
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+        <circle cx="12" cy="13" r="4"/>
+      </svg>
+      Kamera &amp; OCR
     </button>
   </div>
 </header>
 
+<!-- ===================== MAIN ===================== -->
 <main class="main">
 
+  <!-- API Key Banner -->
   <div class="banner hidden" id="banner">
-    <div class="banner-txt">Belum ada API key — gratis pakai <a href="https://aistudio.google.com" target="_blank">Google AI Studio</a></div>
+    <div class="banner-txt">
+      Belum ada API key — gratis pakai
+      <a href="https://aistudio.google.com" target="_blank">Google AI Studio</a>
+    </div>
     <button class="banner-btn" id="bannerBtn">Set</button>
   </div>
 
-  <!-- TAB TERJEMAHAN -->
+  <!-- ===== TAB: TERJEMAHAN ===== -->
   <div id="pageTr">
     <div class="card">
+
       <!-- Language Picker -->
       <div class="lang-picker">
         <div class="lang-sel">
@@ -263,10 +95,17 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
             <option value="de">🇩🇪 Jerman</option>
             <option value="es">🇪🇸 Spanyol</option>
           </select>
-          <svg class="sel-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          <svg class="sel-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
         </div>
         <button class="swap-btn" id="swapBtn" title="Tukar bahasa">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="17 1 21 5 17 9"/>
+            <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+            <polyline points="7 23 3 19 7 15"/>
+            <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+          </svg>
         </button>
         <div class="lang-sel">
           <select id="tgtLang">
@@ -280,15 +119,19 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
             <option value="de">🇩🇪 Jerman</option>
             <option value="es">🇪🇸 Spanyol</option>
           </select>
-          <svg class="sel-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          <svg class="sel-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
         </div>
       </div>
 
-      <!-- Source -->
+      <!-- Source Panel -->
       <div class="ta-wrap">
         <textarea class="ta" id="srcTxt" placeholder="Masukkan teks" maxlength="5000"></textarea>
         <button class="clear-btn" id="clearBtn" title="Hapus">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
         </button>
         <div class="panel-foot">
           <span class="char-cnt" id="charCnt"></span>
@@ -297,7 +140,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 
       <div class="ta-divider"></div>
 
-      <!-- Output -->
+      <!-- Output Panel -->
       <div class="ta-wrap">
         <textarea class="ta ta-out" id="outTxt" placeholder="" readonly></textarea>
         <div class="skel" id="skelWrap">
@@ -311,11 +154,18 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
         <div class="romaji" id="romajiBox"></div>
         <div class="panel-foot">
           <button class="foot-btn" id="copyBtn">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
             Salin
           </button>
           <button class="foot-btn" id="shareBtn">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
             Bagikan
           </button>
         </div>
@@ -324,7 +174,10 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
       <!-- Action Bar -->
       <div class="action-bar">
         <button class="btn-tr" id="trBtn">
-          <svg class="tr-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <svg class="tr-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
           <div class="spin"></div>
           Terjemahkan
         </button>
@@ -334,9 +187,10 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
         </label>
         <button class="hist-btn" id="histBtn">Riwayat</button>
       </div>
+
     </div>
 
-    <!-- History -->
+    <!-- History Card -->
     <div class="hist-card" id="histCard">
       <div class="hist-head">
         <span class="hist-title">Riwayat</span>
@@ -348,9 +202,11 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
     </div>
   </div>
 
-  <!-- TAB OCR -->
+  <!-- ===== TAB: OCR ===== -->
   <div id="pageOcr" class="hidden">
     <div class="ocr-card">
+
+      <!-- Upload Zone (label = bisa diklik di iOS/Android) -->
       <label class="upload-zone" id="dropZone" for="imgInput">
         <input type="file" id="imgInput" accept="image/jpeg,image/png,image/webp"
           style="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;"/>
@@ -358,20 +214,31 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
         <h3>Ketuk untuk Upload Gambar</h3>
         <p>Teks akan langsung diterjemahkan otomatis</p>
       </label>
+
       <div class="ocr-btns">
-        <!-- Kamera: label langsung ke input, paling kompatibel iOS/Android -->
+        <!-- Kamera — label langsung ke input (iOS/Android compatible) -->
         <label class="btn-cam" for="camInput">
           <input type="file" accept="image/*" capture="environment" id="camInput"
             style="position:fixed;top:-9999px;left:-9999px;opacity:0;"/>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
           Kamera
         </label>
+
+        <!-- Galeri -->
         <label class="btn-cam" for="galInput">
           <input type="file" accept="image/jpeg,image/png,image/webp" id="galInput"
             style="position:fixed;top:-9999px;left:-9999px;opacity:0;"/>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
           Galeri
         </label>
+
         <div class="ocr-lang-wrap">
           Bahasa:
           <div class="ocr-sel-wrap">
@@ -383,32 +250,45 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
               <option value="kor">🇰🇷 Korea</option>
               <option value="chi_sim">🇨🇳 Mandarin</option>
             </select>
-            <svg class="ocr-sel-caret" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            <svg class="ocr-sel-caret" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
           </div>
         </div>
       </div>
+
+      <!-- Preview -->
       <div class="prev-wrap" id="ocrPrev">
-        <img id="ocrImg" src="" alt="Preview"/>
+        <img id="ocrImg" src="" alt="Preview gambar"/>
         <div class="prev-actions">
           <button class="btn-rm" id="removeImg">Hapus Gambar</button>
         </div>
       </div>
+
+      <!-- OCR Progress -->
       <div class="prog-wrap" id="ocrProg">
-        <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+        <div class="prog-bar">
+          <div class="prog-fill" id="progFill"></div>
+        </div>
         <div class="prog-lbl" id="progLbl">Memuat...</div>
       </div>
+
     </div>
   </div>
 
 </main>
 
-<!-- CAMERA MODAL -->
+<!-- ===================== CAMERA MODAL ===================== -->
 <div class="overlay" id="camModal">
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-head">
       <span class="modal-title">Ambil Foto</span>
-      <button class="modal-close" id="closeCam"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <button class="modal-close" id="closeCam">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
     </div>
     <div class="modal-body">
       <video class="cam-video" id="camVid" autoplay playsinline muted></video>
@@ -417,25 +297,32 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
     <div class="modal-foot">
       <button class="btn-cancel" id="camCancel">Batal</button>
       <button class="btn-cap" id="capBtn">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M20 7h-3.5L14 4H10L7.5 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M20 7h-3.5L14 4H10L7.5 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+        </svg>
         Foto
       </button>
     </div>
   </div>
 </div>
 
-<!-- CONFIG MODAL -->
+<!-- ===================== CONFIG MODAL ===================== -->
 <div class="overlay" id="cfgModal">
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-head">
       <span class="modal-title">Pengaturan API</span>
-      <button class="modal-close" id="closeCfg"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <button class="modal-close" id="closeCfg">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
     </div>
     <div class="modal-body">
       <div class="fg">
         <label class="fl">Provider</label>
-        <select class="fi" id="providerSel" style="cursor:pointer;appearance:none">
+        <select class="fi" id="providerSel" style="cursor:pointer;appearance:none;-webkit-appearance:none">
           <option value="google">Google AI Studio (Gratis)</option>
           <option value="openrouter">OpenRouter</option>
         </select>
@@ -443,11 +330,14 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
       </div>
       <div class="fg">
         <label class="fl">API Key</label>
-        <input class="fi" type="password" id="keyInp" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Paste API key di sini..."/>
+        <input class="fi" type="password" id="keyInp"
+          autocomplete="off" autocorrect="off" spellcheck="false"
+          placeholder="Paste API key di sini..."/>
       </div>
       <div class="fg">
         <label class="fl">Model</label>
-        <input class="fi" type="text" id="modelInp" autocomplete="off" autocorrect="off" spellcheck="false"/>
+        <input class="fi" type="text" id="modelInp"
+          autocomplete="off" autocorrect="off" spellcheck="false"/>
         <div class="fn" id="modelNote"></div>
       </div>
       <div class="sec-note">⚠️ API key tersimpan di browser lokal Anda saja.</div>
@@ -460,307 +350,14 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
   </div>
 </div>
 
+<!-- Toast Container -->
 <div class="toasts" id="toasts"></div>
 
-<script>
-const LANG={auto:'detected language',id:'Indonesian',en:'English',ja:'Japanese',ko:'Korean',zh:'Mandarin Chinese',ar:'Arabic',fr:'French',de:'German',es:'Spanish'};
-const PROVIDERS={
-  google:{defaultModel:'gemini-2.0-flash',modelNote:'Contoh: gemini-2.0-flash, gemini-1.5-flash',keyNote:'Dari <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a> → Get API Key. Format: <code>AIzaSy...</code>'},
-  openrouter:{defaultModel:'openai/gpt-4o-mini',modelNote:'Contoh: openai/gpt-4o-mini, mistralai/mistral-7b-instruct:free',keyNote:'Dari <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a>. Format: <code>sk-or-v1-...</code>'}
-};
-const $=id=>document.getElementById(id);
-let cfg={provider:'google',key:'',model:'gemini-2.0-flash'};
-let hist=[],autoOn=true,busy=false,camStream=null,imgFile=null;
-let abortCtrl=null, lastTranslatedText='', debounceTimer=null;
+<!-- ===================== SCRIPTS ===================== -->
+<!-- Load order: translate → ocr → ui (ui calls init last) -->
+<script src="translate.js"></script>
+<script src="ocr.js"></script>
+<script src="ui.js"></script>
 
-function init(){
-  loadCfg();loadHist();loadLast();
-  updateBanner();renderHist();bindEvents();
-  applyTheme(localStorage.getItem('lingua_theme')||'light');
-}
-
-function applyTheme(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('lingua_theme',t);$('moonIco').classList.toggle('hidden',t==='dark');$('sunIco').classList.toggle('hidden',t==='light');}
-
-function switchTab(t){
-  $('pageTr').classList.toggle('hidden',t!=='tr');
-  $('pageOcr').classList.toggle('hidden',t!=='ocr');
-  $('tabTr').classList.toggle('active',t==='tr');
-  $('tabOcr').classList.toggle('active',t==='ocr');
-}
-
-function loadCfg(){try{const s=localStorage.getItem('lingua_cfg');if(s)cfg={...cfg,...JSON.parse(s)};}catch(e){}}
-function saveCfg(){localStorage.setItem('lingua_cfg',JSON.stringify(cfg));}
-function updateBanner(){$('banner').classList.toggle('hidden',!!(cfg.key&&cfg.key.length>8));}
-function openCfg(){$('providerSel').value=cfg.provider||'google';$('keyInp').value=cfg.key||'';$('modelInp').value=cfg.model||PROVIDERS[cfg.provider||'google'].defaultModel;updateProviderUI();$('cfgModal').classList.add('open');}
-function closeCfg(){$('cfgModal').classList.remove('open');}
-function updateProviderUI(){const p=$('providerSel').value;$('providerNote').innerHTML=PROVIDERS[p].keyNote;$('modelNote').textContent=PROVIDERS[p].modelNote;if(!$('modelInp').value||Object.values(PROVIDERS).some(x=>x.defaultModel===$('modelInp').value))$('modelInp').value=PROVIDERS[p].defaultModel;}
-
-async function translate(){
-  const text=$('srcTxt').value.trim();
-  if(!text){$('outTxt').value='';$('romajiBox').style.display='none';return;}
-  if(!cfg.key||cfg.key.length<8){toast('Set API key dulu','error');openCfg();return;}
-  // Skip if same text already translated
-  if(text===lastTranslatedText&&$('outTxt').value)return;
-  // Cancel previous request
-  if(abortCtrl)abortCtrl.abort();
-  abortCtrl=new AbortController();
-  const signal=abortCtrl.signal;
-  if(busy)return;
-  const src=$('srcLang').value,tgt=$('tgtLang').value;
-  if(src!=='auto'&&src===tgt){toast('Bahasa sama','info');return;}
-  busy=true;setLoadingAuto(true);
-  const needRomaji=(tgt==='ja'||tgt==='ko');
-  const srcL=LANG[src]||src,tgtL=LANG[tgt]||tgt;
-  const systemPrompt=`You are an elite professional translator.
-
-Your task is to translate text naturally like a native speaker.
-
-Rules:
-- Prioritize meaning, tone, context, and emotion over literal translation
-- Make outputs sound fluent, human, and conversational
-- Adapt idioms and cultural expressions naturally
-- Avoid robotic or textbook phrasing
-- Preserve nuance, intent, and emotional tone
-- Handle casual and formal language appropriately
-- For Japanese: use casual speech (口語) for casual input, formal only when context requires
-- For Indonesian: use natural modern Indonesian, avoid overly formal wording
-- For English: use fluent modern English, avoid stiff phrasing
-- For Korean: sound like real native conversation, not textbook Korean
-- Never explain translations, never add commentary
-- Output ONLY the translated text`;
-
-const prompt=needRomaji
-    ?`${systemPrompt}
-
-Translate from ${srcL} to ${tgtL}. Response format:
-TRANSLATION: [translated text]
-ROMAJI: [romanized latin reading]
-
-Text to translate:
-${text}`
-    :`${systemPrompt}
-
-Translate from ${srcL} to ${tgtL}:
-
-${text}`;
-  try{
-    let result='',romaji='';
-    if(cfg.provider==='google'){
-      const url=`https://generativelanguage.googleapis.com/v1beta/models/${cfg.model}:generateContent?key=${cfg.key}`;
-      const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:2000,temperature:0.3}}),signal});
-      if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(`[${res.status}] ${e?.error?.message||'Google API error'}`);}
-      const d=await res.json();
-      result=d?.candidates?.[0]?.content?.parts?.[0]?.text?.trim()||'';
-    }else{
-      const res=await fetch('https://openrouter.ai/api/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${cfg.key}`,'HTTP-Referer':location.href,'X-Title':'LinguaAI'},body:JSON.stringify({model:cfg.model,max_tokens:2000,messages:[{role:'user',content:prompt}]}),signal});
-      if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(`[${res.status}] ${e?.error?.message||'OpenRouter error'}`);}
-      const d=await res.json();
-      result=d?.choices?.[0]?.message?.content?.trim()||'';
-    }
-    if(!result)throw new Error('Respons kosong.');
-    if(needRomaji&&result.includes('TRANSLATION:')){
-      const tm=result.match(/TRANSLATION:\s*([\s\S]+?)(?=ROMAJI:|$)/);
-      const rm=result.match(/ROMAJI:\s*([\s\S]+)/);
-      if(tm)result=tm[1].trim();
-      romaji=rm?rm[1].trim():'';
-    }
-    lastTranslatedText=text;
-    $('outTxt').classList.add('fading');
-    setTimeout(()=>{
-      $('outTxt').value=result;$('outTxt').style.display='block';resize($('outTxt'));
-      $('outTxt').classList.remove('fading');
-    },150);
-    if(romaji){$('romajiBox').textContent=romaji;$('romajiBox').style.display='block';}
-    else $('romajiBox').style.display='none';
-    addHist(text,result,src,tgt);saveLast(text,result);
-  }catch(err){
-    if(err.name==='AbortError')return; // request dibatalkan, abaikan
-    console.error(err);
-    if(err.message&&!err.message.includes('abort'))toast(err.message||'Gagal','error');
-  }finally{busy=false;setLoadingAuto(false);}
-}
-
-function setLoading(on){
-  $('trBtn').disabled=on;$('trBtn').classList.toggle('loading',on);
-  $('outTxt').style.display=on?'none':'block';
-  $('skelWrap').classList.toggle('show',on);
-  $('typingDot').classList.remove('show');
-  if(on)$('romajiBox').style.display='none';
-}
-function setLoadingAuto(on){
-  $('trBtn').classList.toggle('loading',on);
-  if(on){
-    $('typingDot').classList.add('show');
-    $('skelWrap').classList.remove('show');
-    $('outTxt').style.display='block';
-  } else {
-    $('typingDot').classList.remove('show');
-  }
-}
-function resize(el){el.style.height='auto';el.style.height=Math.max(140,el.scrollHeight)+'px';}
-
-function addHist(s,t,sl,tl){hist.unshift({id:Date.now(),source:s.slice(0,200),target:t.slice(0,200),srcLang:sl,tgtLang:tl,time:new Date().toISOString()});if(hist.length>30)hist=hist.slice(0,30);localStorage.setItem('lingua_hist',JSON.stringify(hist));renderHist();}
-function loadHist(){try{hist=JSON.parse(localStorage.getItem('lingua_hist')||'[]');}catch(e){hist=[];}}
-function renderHist(){
-  const list=$('histList'),empty=$('histEmpty');
-  const items=hist.filter(h=>h&&h.source);
-  if(!items.length){empty.style.display='block';return;}
-  empty.style.display='none';list.innerHTML='';list.appendChild(empty);
-  items.forEach(h=>{
-    const el=document.createElement('div');el.className='hist-item';
-    const sl=(LANG[h.srcLang]||h.srcLang||'').split(' ')[0];
-    const tl=(LANG[h.tgtLang]||h.tgtLang||'').split(' ')[0];
-    el.innerHTML=`<span class="hist-lang">${sl}→${tl}</span><div class="hist-texts"><div class="hist-src">${esc(h.source)}</div><div class="hist-tgt">${esc(h.target)}</div></div><span class="hist-time">${fmtTime(h.time)}</span>`;
-    el.onclick=()=>{$('srcTxt').value=h.source;$('outTxt').value=h.target||'';if(h.srcLang)$('srcLang').value=h.srcLang;if(h.tgtLang)$('tgtLang').value=h.tgtLang;resize($('srcTxt'));resize($('outTxt'));updateChar();$('histCard').classList.remove('show');toast('Dimuat','info');window.scrollTo({top:0,behavior:'smooth'});};
-    list.appendChild(el);
-  });
-}
-function saveLast(s,t){try{localStorage.setItem('lingua_last',JSON.stringify({source:s,target:t,srcLang:$('srcLang').value,tgtLang:$('tgtLang').value}));}catch(e){}}
-function loadLast(){try{const d=JSON.parse(localStorage.getItem('lingua_last')||'{}');if(d.source){$('srcTxt').value=d.source;$('outTxt').value=d.target||'';if(d.srcLang)$('srcLang').value=d.srcLang;if(d.tgtLang)$('tgtLang').value=d.tgtLang;updateChar();resize($('srcTxt'));if(d.target)resize($('outTxt'));}}catch(e){}}
-
-function loadImg(file){
-  if(!file)return;
-  if(!['image/jpeg','image/png','image/webp'].includes(file.type)){toast('Format tidak didukung','error');return;}
-  if(file.size>10*1024*1024){toast('File terlalu besar','error');return;}
-  imgFile=file;
-  const r=new FileReader();
-  r.onload=e=>{
-    $('ocrImg').src=e.target.result;
-    $('ocrPrev').classList.add('show');
-    // Auto jalankan OCR lalu translate
-    runOCRandTranslate();
-  };
-  r.readAsDataURL(file);
-  toast('Memproses gambar...','info');
-}
-
-async function runOCRandTranslate(){
-  if(!imgFile)return;
-  const sel=$('ocrLang').value,lang=sel==='auto'?'eng+jpn+ind+kor':sel;
-  $('ocrProg').classList.add('show');$('progFill').style.width='0%';$('progLbl').textContent='Mendeteksi teks...';
-  try{
-    const worker=await Tesseract.createWorker(lang,1,{logger:m=>{
-      if(m.status==='recognizing text'){$('progFill').style.width=Math.round(m.progress*80)+'%';$('progLbl').textContent=`Membaca teks... ${Math.round(m.progress*100)}%`;}
-      else if(m.status.includes('load')){$('progFill').style.width='15%';$('progLbl').textContent='Memuat OCR...';}
-    }});
-    const{data:{text}}=await worker.recognize(imgFile);
-    await worker.terminate();
-    const cleaned=text.trim();
-    if(!cleaned){toast('Tidak ada teks terdeteksi di gambar','error');$('ocrProg').classList.remove('show');return;}
-    $('progFill').style.width='85%';$('progLbl').textContent='Menerjemahkan...';
-    // Pindah ke tab terjemahan
-    switchTab('tr');
-    $('srcTxt').value=cleaned;updateChar();resize($('srcTxt'));
-    // Auto translate langsung
-    await translate();
-    $('progFill').style.width='100%';$('progLbl').textContent='Selesai!';
-    setTimeout(()=>$('ocrProg').classList.remove('show'),1200);
-  }catch(err){
-    toast('Gagal: '+(err.message||'error'),'error');
-    $('ocrProg').classList.remove('show');
-  }
-}
-
-async function openCam(){
-  // Cek apakah browser support getUserMedia
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
-    // Fallback: buka file picker langsung (support kamera di HP)
-    const inp=document.createElement('input');
-    inp.type='file';inp.accept='image/*';inp.capture='environment';
-    inp.onchange=e=>{if(e.target.files[0])loadImg(e.target.files[0]);};
-    inp.click();return;
-  }
-  try{
-    camStream=await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}
-    });
-    $('camVid').srcObject=camStream;
-    $('camModal').classList.add('open');
-  }catch(e){
-    console.error('Camera error:',e.name,e.message);
-    if(e.name==='NotAllowedError'||e.name==='PermissionDeniedError'){
-      // Fallback ke file input dengan capture
-      toast('Kamera ditolak — membuka galeri...','info');
-      setTimeout(()=>{
-        const inp=document.createElement('input');
-        inp.type='file';inp.accept='image/*';inp.capture='environment';
-        inp.onchange=e=>{if(e.target.files[0])loadImg(e.target.files[0]);};
-        inp.click();
-      },500);
-    } else if(e.name==='NotFoundError'){
-      toast('Kamera tidak ditemukan di perangkat ini','error');
-    } else if(e.name==='NotReadableError'){
-      toast('Kamera sedang digunakan aplikasi lain','error');
-    } else {
-      // Fallback umum
-      toast('Membuka kamera via galeri...','info');
-      setTimeout(()=>{
-        const inp=document.createElement('input');
-        inp.type='file';inp.accept='image/*';inp.capture='environment';
-        inp.onchange=e=>{if(e.target.files[0])loadImg(e.target.files[0]);};
-        inp.click();
-      },500);
-    }
-  }
-}
-function closeCam(){if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}$('camVid').srcObject=null;$('camModal').classList.remove('open');}
-function capturePhoto(){const v=$('camVid'),c=$('camCanvas');c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);c.toBlob(blob=>{loadImg(new File([blob],'capture.jpg',{type:'image/jpeg'}));closeCam();switchTab('ocr');},'image/jpeg',0.92);}
-
-function toast(msg,type='default'){const c=$('toasts'),el=document.createElement('div');el.className=`toast ${type}`;el.textContent=msg;c.appendChild(el);setTimeout(()=>{el.style.animation='to2 0.25s ease forwards';setTimeout(()=>el.remove(),250);},2500);}
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function updateChar(){const l=$('srcTxt').value.length;$('charCnt').textContent=l>0?l+' / 5000':'';$('clearBtn').classList.toggle('show',l>0);}
-function fmtTime(iso){try{const d=new Date(iso),now=new Date(),diff=now-d;if(diff<60000)return'Baru saja';if(diff<3600000)return Math.floor(diff/60000)+' mnt lalu';if(diff<86400000)return Math.floor(diff/3600000)+' jam lalu';return d.toLocaleDateString('id-ID',{day:'numeric',month:'short'});}catch(e){return'';}}
-
-function bindEvents(){
-  $('themeBtn').onclick=()=>applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
-  $('trBtn').onclick=translate;
-  $('srcTxt').addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();translate();}});
-  $('srcTxt').addEventListener('input',()=>{
-    updateChar();resize($('srcTxt'));
-    if(autoOn){
-      clearTimeout(debounceTimer);
-      // Cancel any in-flight request immediately
-      if(abortCtrl){abortCtrl.abort();abortCtrl=null;busy=false;}
-      const txt=$('srcTxt').value.trim();
-      if(!txt){$('outTxt').value='';$('romajiBox').style.display='none';$('typingDot').classList.remove('show');return;}
-      // Show typing dots while waiting
-      $('typingDot').classList.add('show');
-      debounceTimer=setTimeout(()=>{
-        if($('srcTxt').value.trim().length>1)translate();
-        else $('typingDot').classList.remove('show');
-      },700);
-    }
-  });
-  $('clearBtn').onclick=()=>{$('srcTxt').value='';$('outTxt').value='';$('romajiBox').style.display='none';lastTranslatedText='';if(abortCtrl){abortCtrl.abort();abortCtrl=null;busy=false;}$('typingDot').classList.remove('show');updateChar();resize($('srcTxt'));};
-  $('copyBtn').onclick=async()=>{const t=$('outTxt').value.trim();if(!t){toast('Tidak ada teks','info');return;}try{await navigator.clipboard.writeText(t);}catch(e){const el=document.createElement('textarea');el.value=t;document.body.appendChild(el);el.select();document.execCommand('copy');document.body.removeChild(el);}toast('Disalin!','success');};
-  $('shareBtn').onclick=()=>{const t=$('outTxt').value.trim();if(!t){toast('Tidak ada teks','info');return;}if(navigator.share)navigator.share({text:t}).catch(()=>{});else navigator.clipboard.writeText(t).then(()=>toast('Disalin untuk dibagikan','success'));};
-  $('swapBtn').onclick=()=>{const sv=$('srcLang').value;if(sv==='auto'){toast('Tidak bisa swap saat Deteksi Otomatis','info');return;}const tv=$('tgtLang').value;$('srcLang').value=tv;$('tgtLang').value=sv;const st=$('srcTxt').value;$('srcTxt').value=$('outTxt').value;$('outTxt').value=st;updateChar();resize($('srcTxt'));resize($('outTxt'));};
-  $('autoTgl').onclick=()=>{autoOn=!autoOn;$('autoTgl').classList.toggle('on',autoOn);toast(autoOn?'Auto aktif':'Auto nonaktif','info');};
-  $('histBtn').onclick=()=>$('histCard').classList.toggle('show');
-  $('clrHistBtn').onclick=()=>{hist=[];localStorage.removeItem('lingua_hist');renderHist();toast('Riwayat dihapus','info');};
-  $('cfgBtn').onclick=openCfg;$('bannerBtn').onclick=openCfg;
-  $('closeCfg').onclick=closeCfg;$('cfgCancel').onclick=closeCfg;
-  $('cfgModal').onclick=e=>{if(e.target===$('cfgModal'))closeCfg();};
-  $('providerSel').onchange=updateProviderUI;
-  $('saveBtn').onclick=()=>{const k=$('keyInp').value.trim();if(!k){toast('API key kosong','error');return;}cfg.provider=$('providerSel').value;cfg.key=k;cfg.model=$('modelInp').value.trim()||PROVIDERS[cfg.provider].defaultModel;saveCfg();updateBanner();closeCfg();toast('Tersimpan ✓','success');};
-  $('resetBtn').onclick=()=>{if(confirm('Hapus semua data?')){localStorage.removeItem('lingua_cfg');localStorage.removeItem('lingua_hist');localStorage.removeItem('lingua_last');cfg={provider:'google',key:'',model:'gemini-2.0-flash'};hist=[];renderHist();updateBanner();closeCfg();toast('Reset selesai','info');}};
-  $('imgInput').onchange=e=>{if(e.target.files[0])loadImg(e.target.files[0]);};
-  // Drag drop hanya untuk desktop
-  const dz=$('dropZone');
-  dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag');});
-  dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
-  dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');if(e.dataTransfer&&e.dataTransfer.files[0])loadImg(e.dataTransfer.files[0]);});
-
-  $('removeImg').onclick=()=>{imgFile=null;$('ocrPrev').classList.remove('show');$('ocrImg').src='';$('imgInput').value='';};
-  $('camInput').onchange=e=>{if(e.target.files[0])loadImg(e.target.files[0]);};
-  $('galInput').onchange=e=>{if(e.target.files[0])loadImg(e.target.files[0]);};
-  $('capBtn').onclick=capturePhoto;
-  $('closeCam').onclick=closeCam;$('camCancel').onclick=closeCam;
-  $('camModal').onclick=e=>{if(e.target===$('camModal'))closeCam();};
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCfg();closeCam();}});
-}
-
-document.addEventListener('DOMContentLoaded',init);
-</script>
 </body>
 </html>
